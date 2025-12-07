@@ -68,7 +68,7 @@ RSSの形式ごとに、以下のフィールドを取得して内部データ�
 
 ### 設定例 (Firestore)
 
-**コレクション:** `rss_settings`
+**配置先:** rss-deliveryコレクション- rss_settingsドキュメント- `rss_settings`コレクション
 
 **ドキュメントID:** (自動生成ID or 任意のID)
 
