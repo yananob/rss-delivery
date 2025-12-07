@@ -10,9 +10,27 @@
 
 ### 2.1. RSSフィードの取得
 
--   設定ファイルに記述されたURLのRSSフィードを定期的に巡回し、新しい記事を取得する。
+-   設定に記述されたURLのRSSフィードを定期的に巡回し、新しい記事を取得する。
 -   RSS 1.0, RSS 2.0, Atom形式のフィードに対応する。
 -   一度取得した記事を再度配信しないよう、各フィードの最終取得日時を記録・管理する。
+
+#### RSS形式の判別
+
+取得したXMLのルート要素名によって、以下の通りRSSの形式を判別する。
+
+-   `RDF`: RSS 1.0
+-   `rss`: RSS 2.0
+-   `feed`: Atom
+
+#### 取得フィールド
+
+RSSの形式ごとに、以下のフィールドを取得して内部データとして利用する。
+
+| RSS形式 | 記事タイトル | 記事リンク | 記事概要 | 更新日時 |
+| :--- | :--- | :--- | :--- | :--- |
+| **RSS 1.0** | `title` | `link` | `description` | `dc:date` |
+| **RSS 2.0** | `title` | `link` | `description` | `pubDate` |
+| **Atom** | `title` | `link` (rel="alternate") | `content` または `summary` | `updated` |
 
 ### 2.2. 更新内容の配信
 
@@ -21,6 +39,14 @@
 #### 2.2.1. LINEへの配信
 
 -   記事の「フィード名」「タイトル」「概要」「リンク」を整形し、指定されたLINEアカウント（個人またはグループ）にメッセージとして送信する。
+-   メッセージは以下の形式で組み立てられる。
+
+```
+<フィード名>
+【記事タイトル】
+記事概要
+記事リンク
+```
 
 #### 2.2.2. Webサービスへの保存
 
@@ -28,39 +54,43 @@
 
 ## 3. 設定方法
 
-配信対象のRSSフィードや通知先は、設定ファイルにJSONライクな形式で記述する。
+配信対象のRSSフィードや通知先は、**Firestore**の特定のコレクションからドキュメントとして取得する。
 
-### 設定項目
+### 設定項目 (Firestoreドキュメントのフィールド)
 
-| キー | 説明 | 例 |
+| フィールド名 | 説明 | 例 |
 | :--- | :--- | :--- |
-| `name` | RSSフィードの名称 | `"高松小学校"` |
-| `url` | RSSフィードのURL | `"http://swa.city-osaka.ed.jp/weblog/rss2.php?id=e711600"` |
+| `name` | RSSフィードの名称 | `"サンプルフィード"` |
+| `url` | RSSフィードのURL | `"https://example.com/rss.xml"` |
 | `notify_method` | 配信方法。"LINE" または "Save" を指定。 | `"LINE"` |
-| `notify_bot` | （LINE配信時）通知に使用するBOTの識別子。 | `"tm_es"` |
-| `notify_target` | （LINE配信時）通知先の識別子。 | `"tm_es"` |
+| `notify_bot` | （LINE配信時）通知に使用するBOTの識別子。 | `"bot_A"` |
+| `notify_target` | （LINE配信時）通知先の識別子。 | `"target_X"` |
 
-### 設定例
+### 設定例 (Firestore)
 
-#### LINE配信の設定
+**コレクション:** `rss_settings`
 
-```javascript
+**ドキュメントID:** (自動生成ID or 任意のID)
+
+#### LINE配信用のドキュメント
+
+```json
 {
-  "name": "高松小学校",
-  "url": "http://swa.city-osaka.ed.jp/weblog/rss2.php?id=e711600",
+  "name": "サンプルフィード",
+  "url": "https://example.com/rss.xml",
   "notify_method": "LINE",
-  "notify_bot": "tm_es",
-  "notify_target": "tm_es",
+  "notify_bot": "bot_A",
+  "notify_target": "target_X"
 }
 ```
 
-#### Webサービス保存の設定
+#### Webサービス保存用のドキュメント
 
-```javascript
+```json
 {
-  "name": "メールマガジンRSS",
-  "url": "https://mailmag4me.blogspot.jp/feeds/posts/default",
-  "notify_method": "Save",
+  "name": "技術ブログRSS",
+  "url": "https://tech.example.com/feed",
+  "notify_method": "Save"
 }
 ```
 
@@ -71,6 +101,8 @@
 
 ## 5. 依存外部サービス
 
--   Google Sheets: 各RSSフィードの最終取得日時を管理するために使用。
--   LINE Messaging API: LINEへメッセージを送信するために使用。
--   Raindrop.io API: Webサービスへリンクを保存するために使用。
+-   **Firestore**:
+    -   配信設定の管理
+    -   各RSSフィードの最終取得日時の管理
+-   **LINE Messaging API**: LINEへメッセージを送信するために使用。
+-   **Raindrop.io API**: Webサービスへリンクを保存するために使用。
