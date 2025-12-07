@@ -10,9 +10,17 @@
 
 ### 2.1. RSSフィードの取得
 
--   設定ファイルに記述されたURLのRSSフィードを定期的に巡回し、新しい記事を取得する。
+-   設定に記述されたURLのRSSフィードを定期的に巡回し、新しい記事を取得する。
 -   RSS 1.0, RSS 2.0, Atom形式のフィードに対応する。
 -   一度取得した記事を再度配信しないよう、各フィードの最終取得日時を記録・管理する。
+
+#### RSS形式の判別
+
+取得したXMLのルート要素名によって、以下の通りRSSの形式を判別する。
+
+-   `RDF`: RSS 1.0
+-   `rss`: RSS 2.0
+-   `feed`: Atom
 
 #### 取得フィールド
 
@@ -46,11 +54,11 @@ RSSの形式ごとに、以下のフィールドを取得して内部データ�
 
 ## 3. 設定方法
 
-配信対象のRSSフィードや通知先は、設定ファイルにJSONライクな形式で記述する。
+配信対象のRSSフィードや通知先は、**Firestore**の特定のコレクションからドキュメントとして取得する。
 
-### 設定項目
+### 設定項目 (Firestoreドキュメントのフィールド)
 
-| キー | 説明 | 例 |
+| フィールド名 | 説明 | 例 |
 | :--- | :--- | :--- |
 | `name` | RSSフィードの名称 | `"サンプルフィード"` |
 | `url` | RSSフィードのURL | `"https://example.com/rss.xml"` |
@@ -58,27 +66,31 @@ RSSの形式ごとに、以下のフィールドを取得して内部データ�
 | `notify_bot` | （LINE配信時）通知に使用するBOTの識別子。 | `"bot_A"` |
 | `notify_target` | （LINE配信時）通知先の識別子。 | `"target_X"` |
 
-### 設定例
+### 設定例 (Firestore)
 
-#### LINE配信の設定
+**コレクション:** `rss_settings`
 
-```javascript
+**ドキュメントID:** (自動生成ID or 任意のID)
+
+#### LINE配信用のドキュメント
+
+```json
 {
   "name": "サンプルフィード",
   "url": "https://example.com/rss.xml",
   "notify_method": "LINE",
   "notify_bot": "bot_A",
-  "notify_target": "target_X",
+  "notify_target": "target_X"
 }
 ```
 
-#### Webサービス保存の設定
+#### Webサービス保存用のドキュメント
 
-```javascript
+```json
 {
   "name": "技術ブログRSS",
   "url": "https://tech.example.com/feed",
-  "notify_method": "Save",
+  "notify_method": "Save"
 }
 ```
 
@@ -89,6 +101,8 @@ RSSの形式ごとに、以下のフィールドを取得して内部データ�
 
 ## 5. 依存外部サービス
 
--   **Firestore**: 各RSSフィードの最終取得日時を管理するために使用。
+-   **Firestore**:
+    -   配信設定の管理
+    -   各RSSフィードの最終取得日時の管理
 -   **LINE Messaging API**: LINEへメッセージを送信するために使用。
 -   **Raindrop.io API**: Webサービスへリンクを保存するために使用。
