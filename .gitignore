@@ -1,12 +1,6 @@
-configs/*.json
-configs/*.json.bak
-
-tmp/
-_deploy/
-
-# for PHP
-cache/
-templates_c/
+# Composer
 vendor/
+composer.phar
 
-*_tokens.md
+# PHPUnit
+.phpunit.result.cache
