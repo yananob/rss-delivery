@@ -15,22 +15,22 @@ class FirestoreRepositoryTest extends TestCase
     private FirestoreRepository $repository;
     private FirestoreClient $firestore;
     private CollectionReference $collectionRoot;
-    private static string $testFeedId1;
-    private static string $testFeedId2;
+    private string $testFeedId1;
+    private string $testFeedId2;
     // private static string $projectId = 'test-project';
 
-    public static function setUpBeforeClass(): void
-    {
-        self::$testFeedId1 = 'test-feed-id-1-' . uniqid();
-        self::$testFeedId2 = 'test-feed-id-2-' . uniqid();
-    }
+    // public static function setUpBeforeClass(): void {
+    // }
 
     protected function setUp(): void
     {
+        parent::setUp();
+
         // Firestoreエミュレータを使用するように環境変数を設定
         // putenv('FIRESTORE_EMULATOR_HOST=localhost:8080');
 
         // 実際のFirestoreクライアントを使用
+        var_dump(getenv());
         var_dump(getenv('FIREBASE_CONFIG'));
         $gcpServiceAccount = json_decode(getenv('FIREBASE_CONFIG'), true);
         var_dump($gcpServiceAccount);
@@ -42,15 +42,17 @@ class FirestoreRepositoryTest extends TestCase
         $this->collectionRoot = $this->firestore->collection(AppConfig::getFirestoreRootCollection());
         $this->repository = new FirestoreRepository($this->firestore);
 
+        $this->testFeedId1 = 'test-feed-id-1-' . uniqid();
+        $this->testFeedId2 = 'test-feed-id-2-' . uniqid();
         // テストデータを投入
-        $this->collectionRoot->document('rss_feeds')->collection('rss_feeds')->document(self::$testFeedId1)->set([
+        $this->collectionRoot->document('rss_feeds')->collection('rss_feeds')->document($this->testFeedId1)->set([
             'name' => 'Integration Test Feed 1',
             'url' => 'https://example.com/integration1.xml',
             'notify_method' => 'LINE',
             'notify_bot' => 'bot_A',
             'notify_target' => 'target_X',
         ]);
-        $this->collectionRoot->document('rss_feeds')->collection('rss_feeds')->document(self::$testFeedId2)->set([
+        $this->collectionRoot->document('rss_feeds')->collection('rss_feeds')->document($this->testFeedId2)->set([
             'name' => 'Integration Test Feed 2',
             'url' => 'https://example.com/integration2.xml',
             'notify_method' => 'Save',
@@ -63,13 +65,15 @@ class FirestoreRepositoryTest extends TestCase
     protected function tearDown(): void
     {
         // テストデータをクリーンアップ
-        $this->collectionRoot->document('rss_feeds')->collection('rss_feeds')->document(self::$testFeedId1)->delete();
-        $this->collectionRoot->document('rss_feeds')->collection('rss_feeds')->document(self::$testFeedId2)->delete();
+        $this->collectionRoot->document('rss_feeds')->collection('rss_feeds')->document($this->testFeedId1)->delete();
+        $this->collectionRoot->document('rss_feeds')->collection('rss_feeds')->document($this->testFeedId2)->delete();
         $this->collectionRoot->document('line_bots')->collection('line_bots')->document('bot_A')->delete();
-        $this->collectionRoot->document('updates')->collection('updates')->document(self::$testFeedId1)->delete();
+        $this->collectionRoot->document('updates')->collection('updates')->document($this->testFeedId1)->delete();
 
-        // 環境変数を元に戻す
-        putenv('FIRESTORE_EMULATOR_HOST');
+        // // 環境変数を元に戻す
+        // putenv('FIRESTORE_EMULATOR_HOST');
+
+        parent::tearDown();
     }
 
     /**
@@ -81,7 +85,7 @@ class FirestoreRepositoryTest extends TestCase
 
         $testFeed1 = null;
         foreach($feeds as $feed) {
-            if ($feed['id'] === self::$testFeedId1) {
+            if ($feed['id'] === $this->testFeedId1) {
                 $testFeed1 = $feed;
                 break;
             }
@@ -98,9 +102,9 @@ class FirestoreRepositoryTest extends TestCase
     public function test_最終更新日時の保存と取得ができる(): void
     {
         $timestamp = time();
-        $this->repository->saveLastUpdatedAt(self::$testFeedId1, $timestamp);
+        $this->repository->saveLastUpdatedAt($this->testFeedId1, $timestamp);
 
-        $lastUpdatedAt = $this->repository->getLastUpdatedAt(self::$testFeedId1);
+        $lastUpdatedAt = $this->repository->getLastUpdatedAt($this->testFeedId1);
 
         $this->assertEquals($timestamp, $lastUpdatedAt);
     }
