@@ -8,9 +8,6 @@ use PHPUnit\Framework\TestCase;
 
 class RssParserTest extends TestCase
 {
-    /**
-     * @test
-     */
     public function test_RSS_2_0フィードを正しく解析できる(): void
     {
         $rssContent = <<<XML
@@ -52,10 +49,7 @@ XML;
         $this->assertEquals(strtotime('2023-01-02 12:00:00'), $result[1]['updated_at']);
     }
 
-    /**
-     * @test
-     */
-    public function test_RSS_1_0フィードを正しく解析できる(): void
+  public function test_RSS_1_0フィードを正しく解析できる(): void
     {
         $rdfContent = <<<XML
 <?xml version="1.0" encoding="UTF-8"?>
@@ -84,10 +78,7 @@ XML;
         $this->assertEquals(strtotime('2023-01-03T12:00:00Z'), $result[0]['updated_at']);
     }
 
-    /**
-     * @test
-     */
-    public function test_Atomフィードを正しく解析できる(): void
+  public function test_Atomフィードを正しく解析できる(): void
     {
         $atomContent = <<<XML
 <?xml version="1.0" encoding="utf-8"?>

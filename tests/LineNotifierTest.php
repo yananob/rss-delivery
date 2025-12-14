@@ -12,9 +12,6 @@ use PHPUnit\Framework\TestCase;
 
 class LineNotifierTest extends TestCase
 {
-    /**
-     * @test
-     */
     public function test_LINE通知が正しく送信される(): void
     {
         // GuzzleのClientをモック
@@ -46,9 +43,6 @@ class LineNotifierTest extends TestCase
         $this->assertTrue($result);
     }
 
-    /**
-     * @test
-     */
     public function test_LINE通知が失敗したときにfalseを返す(): void
     {
         // GuzzleのClientをモックし、例外をスローさせる

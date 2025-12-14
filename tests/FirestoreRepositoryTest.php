@@ -18,10 +18,6 @@ class FirestoreRepositoryTest extends TestCase
     private string $testFeedId1;
     private string $testFeedId2;
     private const COLLECTION_FEEDS = 'feeds';
-    // private static string $projectId = 'test-project';
-
-    // public static function setUpBeforeClass(): void {
-    // }
 
     protected function setUp(): void
     {
@@ -74,9 +70,6 @@ class FirestoreRepositoryTest extends TestCase
         parent::tearDown();
     }
 
-    /**
-     * @test
-     */
     public function test_RSSフィード設定を正しく取得できる(): void
     {
         $feeds = $this->repository->getRssFeeds();
@@ -94,9 +87,6 @@ class FirestoreRepositoryTest extends TestCase
         $this->assertEquals('LINE', $testFeed1->getNotifyMethod());
     }
 
-    /**
-     * @test
-     */
     public function test_最終更新日時の保存と取得ができる(): void
     {
         $timestamp = time();

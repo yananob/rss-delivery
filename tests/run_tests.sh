@@ -8,6 +8,6 @@ source ./_cf-common/test/export_secrets.sh ${SECRETS[*]}
 bash ./tests/run_linter.sh
 
 echo "Running PHPUnit..."
-php ./vendor/bin/phpunit
+php ./vendor/bin/phpunit --testdox
 
 source ./_cf-common/test/unset_secrets.sh ${SECRETS[*]}
