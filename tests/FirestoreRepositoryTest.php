@@ -10,6 +10,9 @@ use Google\Cloud\Firestore\CollectionReference;
 use Google\Cloud\Firestore\FirestoreClient;
 use PHPUnit\Framework\TestCase;
 
+use DateTime;
+use DateTimeZone;
+
 class FirestoreRepositoryTest extends TestCase
 {
     private FirestoreRepository $repository;
@@ -18,19 +21,18 @@ class FirestoreRepositoryTest extends TestCase
     private string $testFeedId1;
     private string $testFeedId2;
     private const COLLECTION_FEEDS = 'feeds';
+    private const COLLECTION_UPDATES = 'updates';
 
     protected function setUp(): void
     {
         parent::setUp();
 
         // Firestoreエミュレータを使用するように環境変数を設定
-        // putenv('FIRESTORE_EMULATOR_HOST=localhost:8080');
+        putenv('FIRESTORE_EMULATOR_HOST=localhost:8080');
 
-        // 実際のFirestoreクライアントを使用
-        $gcpServiceAccount = json_decode(getenv('FIREBASE_SERVICE_ACCOUNT'), true);
         $this->firestore = new FirestoreClient(
             [
-                'keyFile' => $gcpServiceAccount,
+                'projectId' => 'test-project-id',
             ]
         );
         $this->collectionRoot = $this->firestore->collection(AppConfig::getFirestoreRootCollection());
@@ -51,9 +53,6 @@ class FirestoreRepositoryTest extends TestCase
             'url' => 'https://example.com/integration2.xml',
             'notify_method' => 'Save',
         ]);
-        $this->collectionRoot->document('line_bots')->collection('line_bots')->document('bot_A')->set([
-            'access_token' => 'dummy_token_for_bot_a',
-        ]);
     }
 
     protected function tearDown(): void
@@ -61,12 +60,8 @@ class FirestoreRepositoryTest extends TestCase
         // テストデータをクリーンアップ
         $this->collectionRoot->document(self::COLLECTION_FEEDS)->collection(self::COLLECTION_FEEDS)->document($this->testFeedId1)->delete();
         $this->collectionRoot->document(self::COLLECTION_FEEDS)->collection(self::COLLECTION_FEEDS)->document($this->testFeedId2)->delete();
-        $this->collectionRoot->document('line_bots')->collection('line_bots')->document('bot_A')->delete();
-        $this->collectionRoot->document('updates')->collection('updates')->document($this->testFeedId1)->delete();
-
-        // // 環境変数を元に戻す
-        // putenv('FIRESTORE_EMULATOR_HOST');
-
+        $this->collectionRoot->document(self::COLLECTION_UPDATES)->collection(self::COLLECTION_UPDATES)->document($this->testFeedId1)->delete();
+        putenv('FIRESTORE_EMULATOR_HOST');
         parent::tearDown();
     }
 
@@ -87,13 +82,36 @@ class FirestoreRepositoryTest extends TestCase
         $this->assertEquals('LINE', $testFeed1->getNotifyMethod());
     }
 
-    public function test_最終更新日時の保存と取得ができる(): void
+    public function test_最終更新日時を文字列で保存しタイムスタンプで取得できる(): void
     {
         $timestamp = time();
         $this->repository->saveLastUpdatedAt($this->testFeedId1, $timestamp);
 
-        $lastUpdatedAt = $this->repository->getLastUpdatedAt($this->testFeedId1);
+        // Firestoreに文字列で保存されているか直接確認
+        $document = $this->collectionRoot
+            ->document(self::COLLECTION_UPDATES)
+            ->collection(self::COLLECTION_UPDATES)
+            ->document($this->testFeedId1)
+            ->snapshot();
 
-        $this->assertEquals($timestamp, $lastUpdatedAt);
+        $this->assertTrue($document->exists(), 'Update document should exist.');
+        $savedValue = $document->get('updated_at');
+        $this->assertIsString($savedValue, 'The saved value should be a string.');
+
+        $date = new DateTime();
+        $date->setTimestamp($timestamp);
+        $date->setTimezone(new DateTimeZone('Asia/Tokyo'));
+        $expectedFormat = $date->format('Y/m/d H:i:s');
+        $this->assertEquals($expectedFormat, $savedValue, 'The saved string format is incorrect.');
+
+        // getLastUpdatedAtが正しくタイムスタンプを返すか確認
+        $lastUpdatedAt = $this->repository->getLastUpdatedAt($this->testFeedId1);
+        $this->assertEquals($timestamp, $lastUpdatedAt, 'The retrieved timestamp should match the original.');
+    }
+
+    public function test_最終更新日時が存在しない場合にnullが返ること(): void
+    {
+        $lastUpdatedAt = $this->repository->getLastUpdatedAt('non-existent-feed-id');
+        $this->assertNull($lastUpdatedAt, 'Should return null for non-existent feed ID.');
     }
 }
