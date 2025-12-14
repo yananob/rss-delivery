@@ -49,7 +49,7 @@ class FeedProcessorTest extends TestCase
             ['title' => 'New Post 1', 'updated_at' => 1678886401],
         ];
 
-        putenv('FIREBASE_CONFIG={"tokens":{"bot1":"dummy_token"}, "target_ids":{"bot1":"dummy_target"}}');
+        putenv('FIREBASE_SERVICE_ACCOUNT={"tokens":{"bot1":"dummy_token"}, "target_ids":{"bot1":"dummy_target"}}');
 
         $this->firestoreRepoMock->method('getRssFeeds')->willReturn($feeds);
         $this->firestoreRepoMock->method('getLastUpdatedAt')->willReturn(1678886400);
@@ -60,7 +60,7 @@ class FeedProcessorTest extends TestCase
         $this->firestoreRepoMock->expects($this->once())->method('saveLastUpdatedAt')->with('feed1', 1678886401);
 
         $this->feedProcessor->processAllFeeds();
-        putenv('FIREBASE_CONFIG');
+        putenv('FIREBASE_SERVICE_ACCOUNT');
     }
 
     public function testProcessAllFeeds_RaindropSave()

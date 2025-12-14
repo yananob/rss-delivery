@@ -110,7 +110,7 @@ class FeedProcessor
             return;
         }
 
-        $lineConfig = json_decode(getenv('FIREBASE_CONFIG'), true);
+        $lineConfig = json_decode(getenv('LINE_TOKENS_N_TARGETS'), true);
 
         if (!isset($lineConfig['tokens'][$botId]) || !isset($lineConfig['target_ids'][$botId])) {
             $this->log->error("LINE configuration (token or target ID) for bot '{$botId}' is missing. Item '{$item['title']}' not notified.");
