@@ -6,24 +6,13 @@ use Monolog\Logger;
 
 class FeedProcessor
 {
-    private FirestoreRepository $firestoreRepo;
-    private RssParser $rssParser;
-    private LineNotifier $lineNotifier;
-    private RaindropNotifier $raindropNotifier;
-    private Logger $log;
-
     public function __construct(
-        FirestoreRepository $firestoreRepo,
-        RssParser $rssParser,
-        LineNotifier $lineNotifier,
-        RaindropNotifier $raindropNotifier,
-        Logger $log
+        private FirestoreRepository $firestoreRepo,
+        private RssParser $rssParser,
+        private LineNotifier $lineNotifier,
+        private RaindropNotifier $raindropNotifier,
+        private Logger $log
     ) {
-        $this->firestoreRepo = $firestoreRepo;
-        $this->rssParser = $rssParser;
-        $this->lineNotifier = $lineNotifier;
-        $this->raindropNotifier = $raindropNotifier;
-        $this->log = $log;
     }
 
     public function processAllFeeds(): void
