@@ -15,7 +15,6 @@ class FirestoreRepository
 {
     private const COLLECTION_FEEDS = 'feeds';
     private const COLLECTION_UPDATES = 'updates';
-    private const COLLECTION_RAINDROP = 'raindrop_configs';
 
     private static ?FirestoreClient $client = null;
     private CollectionReference $collectionRoot;
@@ -111,26 +110,5 @@ class FirestoreRepository
             ->document(self::COLLECTION_UPDATES)
             ->collection(self::COLLECTION_UPDATES)
             ->document($feedId);
-    }
-
-    /**
-     * Raindrop.ioの設定を取得する
-     *
-     * @return array<string, mixed>|null 設定情報。存在しない場合はnull
-     */
-    public function getRaindropConfig(): ?array
-    {
-        // "Save" の設定は一つと仮定し、固定のドキュメントID 'main' を使用する
-        $document = $this->collectionRoot
-            ->document(self::COLLECTION_RAINDROP)
-            ->collection(self::COLLECTION_RAINDROP)
-            ->document('main')
-            ->snapshot();
-
-        if ($document->exists()) {
-            return $document->data();
-        }
-
-        return null;
     }
 }

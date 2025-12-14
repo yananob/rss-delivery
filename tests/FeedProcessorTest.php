@@ -75,7 +75,6 @@ class FeedProcessorTest extends TestCase
 
         $this->firestoreRepoMock->method('getRssFeeds')->willReturn($feeds);
         $this->firestoreRepoMock->method('getLastUpdatedAt')->willReturn(1678886400);
-        $this->firestoreRepoMock->method('getRaindropConfig')->willReturn(['access_token' => 'dummy_raindrop_token']);
         $this->rssParserMock->method('parse')->willReturn($items);
 
         $this->lineNotifierMock->expects($this->never())->method('notify');

@@ -88,16 +88,18 @@ class FeedProcessor
     private function saveToRaindrop(array $item): void
     {
         $this->log->info("Attempting to save item '{$item['title']}' to Raindrop.io.");
-        $config = $this->firestoreRepo->getRaindropConfig();
-        $accessToken = $config['access_token'] ?? null;
+        $accessToken = getenv("RAINDROP_KEY");
 
         if (!$accessToken) {
             $this->log->error("Access token for Raindrop.io not found. Item '{$item['title']}' not saved.");
             return;
         }
 
-        $this->raindropNotifier->save($accessToken, $item);
-        $this->log->info("Successfully saved item '{$item['title']}' to Raindrop.io.");
+        if ($this->raindropNotifier->save($accessToken, $item)) {
+            $this->log->info("Successfully saved item '{$item['title']}' to Raindrop.io.");
+        } else {
+            $this->log->error("Failed to save item '{$item['title']}' to Raindrop.io.");
+        }
     }
 
     private function notifyLine(Feed $feed, array $item): void
@@ -117,12 +119,15 @@ class FeedProcessor
             return;
         }
 
-        $this->lineNotifier->notify(
+        if ($this->lineNotifier->notify(
             $lineConfig['tokens'][$botId],
             $lineConfig['target_ids'][$botId],
             $feed->getName(),
             $item
-        );
-        $this->log->info("Successfully sent LINE notification for item '{$item['title']}'.");
+        )) {
+            $this->log->info("Successfully sent LINE notification for item '{$item['title']}'.");
+        } else {
+            $this->log->error("Failed to send LINE notification for item '{$item['title']}'.");
+        }
     }
 }
