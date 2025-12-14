@@ -1,6 +1,21 @@
-# Composer
-vendor/
-composer.phar
+config.json
+**/configs/*.json
+**/configs/*.json.bak
 
-# PHPUnit
-.phpunit.result.cache
+tmp/
+_deploy/
+
+# for Python
+*.pyc
+venv*/
+_backup/
+
+# for PHP
+**/cache/
+**/templates_c/
+**/vendor/
+
+# gemini-cli settings
+.gemini/
+# GitHub App credentials
+gha-creds-*.json

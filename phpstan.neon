@@ -1,0 +1,11 @@
+parameters:
+    level: 5
+    paths:
+        - .
+    excludePaths:
+        - vendor
+        - node_modules (?)
+        - templates_c (?)
+        - _deploy (?)
+
+    treatPhpDocTypesAsCertain: false
