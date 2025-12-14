@@ -4,19 +4,20 @@ namespace App;
 
 use Google\Cloud\Firestore\FirestoreClient;
 use Google\Cloud\Firestore\DocumentReference;
+use Google\Cloud\Firestore\CollectionReference;
 
 /**
  * Firestoreとのやり取りを行うリポジトリクラス
  */
 class FirestoreRepository
 {
-    private const COLLECTION_ROOT = 'rss-delivery';
     private const COLLECTION_FEEDS = 'rss_feeds';
     private const COLLECTION_UPDATES = 'updates';
     private const COLLECTION_LINE_BOTS = 'line_bots';
     private const COLLECTION_RAINDROP = 'raindrop_configs';
 
     private static ?FirestoreClient $client = null;
+    private CollectionReference $collectionRoot;
 
     /**
      * コンストラクタ
@@ -24,15 +25,18 @@ class FirestoreRepository
      */
     public function __construct(FirestoreClient $firestore = null)
     {
-        if (self::$client === null) {
+        if ($firestore) {
+            self::$client = $firestore;
+        } elseif (self::$client === null) {
             $gcpServiceAccount = json_decode(getenv('FIREBASE_CONFIG'), true);
             self::$client = new FirestoreClient(
                 [
                     'keyFile' => $gcpServiceAccount,
                 ]
             );
-            return self::$client;
         }
+
+        $this->collectionRoot = self::$client->collection(AppConfig::getFirestoreRootCollection());
     }
 
     /**
@@ -43,8 +47,7 @@ class FirestoreRepository
     public function getRssFeeds(): array
     {
         $feeds = [];
-        $documents = $this->client
-            ->collection(self::COLLECTION_ROOT)
+        $documents = $this->collectionRoot
             ->document(self::COLLECTION_FEEDS)
             ->collection(self::COLLECTION_FEEDS)
             ->documents();
@@ -98,8 +101,7 @@ class FirestoreRepository
      */
     private function getUpdateDocument(string $feedId): DocumentReference
     {
-        return $this->client
-            ->collection(self::COLLECTION_ROOT)
+        return $this->collectionRoot
             ->document(self::COLLECTION_UPDATES)
             ->collection(self::COLLECTION_UPDATES)
             ->document($feedId);
@@ -113,8 +115,7 @@ class FirestoreRepository
      */
     public function getLineBotConfig(string $botId): ?array
     {
-        $document = $this->client
-            ->collection(self::COLLECTION_ROOT)
+        $document = $this->collectionRoot
             ->document(self::COLLECTION_LINE_BOTS)
             ->collection(self::COLLECTION_LINE_BOTS)
             ->document($botId)
@@ -135,8 +136,7 @@ class FirestoreRepository
     public function getRaindropConfig(): ?array
     {
         // "Save" の設定は一つと仮定し、固定のドキュメントID 'main' を使用する
-        $document = $this->client
-            ->collection(self::COLLECTION_ROOT)
+        $document = $this->collectionRoot
             ->document(self::COLLECTION_RAINDROP)
             ->collection(self::COLLECTION_RAINDROP)
             ->document('main')

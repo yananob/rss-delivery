@@ -8,15 +8,15 @@ namespace App;
  * アプリケーション環境に基づいて設定値を提供します。
  * 環境は`APP_ENV`環境変数によって決定されます。
  *
- * サポートされる環境: 'production', 'test', 'development'。
- * `APP_ENV`が設定されていない場合、デフォルトは'development'です。
+ * サポートされる環境: 'production', 'test', 'local'。
+ * `APP_ENV`が設定されていない場合、デフォルトは'local'です。
  */
 class AppConfig
 {
     /**
      * 現在のアプリケーション環境を取得します。
      *
-     * @return string 現在の環境 ('production', 'test', または 'development')。
+     * @return string 現在の環境 ('production', 'test', または 'local')。
      */
     public static function getEnvironment(): string
     {
@@ -31,9 +31,9 @@ class AppConfig
     public static function getFirestoreRootCollection(): string
     {
         return match (self::getEnvironment()) {
-            'production' => 'daily-quotes',
-            'test', => 'daily-quotes-test',
-            default => 'daily-quotes-test',
+            'production' => 'rss-delivery',
+            'test', => 'rss-delivery-test',
+            default => 'rss-delivery-test',
         };
     }
 
@@ -45,24 +45,9 @@ class AppConfig
     public static function getLineDeliverTarget(): string
     {
         return match (self::getEnvironment()) {
-            'production' => 'stnb',
+            // 'production' => '',
             'test' => 'nobu',
             default => 'nobu',
         };
     }
-
-    /**
-     * アプリケーションのベースパスを取得します。
-     *
-     * @return string ベースパス。
-     */
-    public static function getBasePath(): string
-    {
-        return match (self::getEnvironment()) {
-            'production' => '/daily-quote',
-            'test' => '/daily-quote-test',
-            default => '',
-        };
-    }
-
 }
