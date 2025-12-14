@@ -8,9 +8,6 @@ use Google\Cloud\Firestore\CollectionReference;
 use Google\Cloud\Firestore\FirestoreClient;
 use PHPUnit\Framework\TestCase;
 
-/**
- * @group integration
- */
 class FirestoreRepositoryTest extends TestCase
 {
     private FirestoreRepository $repository;
@@ -32,9 +29,12 @@ class FirestoreRepositoryTest extends TestCase
         // putenv('FIRESTORE_EMULATOR_HOST=localhost:8080');
 
         // 実際のFirestoreクライアントを使用
+        var_dump(getenv('FIREBASE_CONFIG'));
+        $gcpServiceAccount = json_decode(getenv('FIREBASE_CONFIG'), true);
+        var_dump($gcpServiceAccount);
         $this->firestore = new FirestoreClient(
             [
-                'keyFile' => json_decode(getenv('FIREBASE_CONFIG'), true),
+                'keyFile' => $gcpServiceAccount,
             ]
         );
         $this->collectionRoot = $this->firestore->collection(AppConfig::getFirestoreRootCollection());
