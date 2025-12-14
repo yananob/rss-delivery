@@ -16,7 +16,7 @@ class FirestoreRepository
     private const COLLECTION_LINE_BOTS = 'line_bots';
     private const COLLECTION_RAINDROP = 'raindrop_configs';
 
-    private FirestoreClient $firestore;
+    private static ?FirestoreClient $client = null;
 
     /**
      * コンストラクタ
@@ -24,7 +24,15 @@ class FirestoreRepository
      */
     public function __construct(FirestoreClient $firestore = null)
     {
-        $this->firestore = $firestore ?: new FirestoreClient();
+        if (self::$client === null) {
+            $gcpServiceAccount = json_decode(getenv('FIREBASE_CONFIG'), true);
+            self::$client = new FirestoreClient(
+                [
+                    'keyFile' => $gcpServiceAccount,
+                ]
+            );
+            return self::$client;
+        }
     }
 
     /**
@@ -35,7 +43,7 @@ class FirestoreRepository
     public function getRssFeeds(): array
     {
         $feeds = [];
-        $documents = $this->firestore
+        $documents = $this->client
             ->collection(self::COLLECTION_ROOT)
             ->document(self::COLLECTION_FEEDS)
             ->collection(self::COLLECTION_FEEDS)
@@ -90,7 +98,7 @@ class FirestoreRepository
      */
     private function getUpdateDocument(string $feedId): DocumentReference
     {
-        return $this->firestore
+        return $this->client
             ->collection(self::COLLECTION_ROOT)
             ->document(self::COLLECTION_UPDATES)
             ->collection(self::COLLECTION_UPDATES)
@@ -105,7 +113,7 @@ class FirestoreRepository
      */
     public function getLineBotConfig(string $botId): ?array
     {
-        $document = $this->firestore
+        $document = $this->client
             ->collection(self::COLLECTION_ROOT)
             ->document(self::COLLECTION_LINE_BOTS)
             ->collection(self::COLLECTION_LINE_BOTS)
@@ -127,7 +135,7 @@ class FirestoreRepository
     public function getRaindropConfig(): ?array
     {
         // "Save" の設定は一つと仮定し、固定のドキュメントID 'main' を使用する
-        $document = $this->firestore
+        $document = $this->client
             ->collection(self::COLLECTION_ROOT)
             ->document(self::COLLECTION_RAINDROP)
             ->collection(self::COLLECTION_RAINDROP)

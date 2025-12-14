@@ -1,0 +1,4 @@
+#!/bin/bash
+set -eu
+
+SECRETS=("FIREBASE_CONFIG" "LINE_TOKENS_N_TARGETS")
