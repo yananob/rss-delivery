@@ -45,6 +45,7 @@ class RaindropNotifier
                 ],
                 'json' => [
                     'link' => $link,
+                    'pleaseParse' => new \stdClass(),
                 ],
             ]);
 
