@@ -2,7 +2,9 @@
 
 namespace Tests;
 
+use App\AppConfig;
 use App\FirestoreRepository;
+use Google\Cloud\Firestore\CollectionReference;
 use Google\Cloud\Firestore\FirestoreClient;
 use PHPUnit\Framework\TestCase;
 
@@ -13,9 +15,10 @@ class FirestoreRepositoryTest extends TestCase
 {
     private FirestoreRepository $repository;
     private FirestoreClient $firestore;
+    private CollectionReference $collectionRoot;
     private static string $testFeedId1;
     private static string $testFeedId2;
-    private static string $projectId = 'test-project';
+    // private static string $projectId = 'test-project';
 
     public static function setUpBeforeClass(): void
     {
@@ -26,10 +29,15 @@ class FirestoreRepositoryTest extends TestCase
     protected function setUp(): void
     {
         // Firestoreエミュレータを使用するように環境変数を設定
-        putenv('FIRESTORE_EMULATOR_HOST=localhost:8080');
+        // putenv('FIRESTORE_EMULATOR_HOST=localhost:8080');
 
         // 実際のFirestoreクライアントを使用
-        $this->firestore = new FirestoreClient(['projectId' => self::$projectId]);
+        $this->firestore = new FirestoreClient(
+            [
+                'keyFile' => json_decode(getenv('FIREBASE_CONFIG'), true),
+            ]
+        );
+        $this->collectionRoot = $this->firestore->collection(AppConfig::getFirestoreRootCollection());
         $this->repository = new FirestoreRepository($this->firestore);
 
         // テストデータを投入
