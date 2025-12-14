@@ -9,9 +9,7 @@ use App\FirestoreRepository;
 use Google\Cloud\Firestore\CollectionReference;
 use Google\Cloud\Firestore\FirestoreClient;
 use PHPUnit\Framework\TestCase;
-
-use DateTime;
-use DateTimeZone;
+use Carbon\Carbon;
 
 class FirestoreRepositoryTest extends TestCase
 {
@@ -82,9 +80,9 @@ class FirestoreRepositoryTest extends TestCase
         $this->assertEquals('LINE', $testFeed1->getNotifyMethod());
     }
 
-    public function test_最終更新日時を文字列で保存しタイムスタンプで取得できる(): void
+    public function test_最終更新日時をCarbonを使い文字列で保存しタイムスタンプで取得できる(): void
     {
-        $timestamp = time();
+        $timestamp = Carbon::now('Asia/Tokyo')->getTimestamp();
         $this->repository->saveLastUpdatedAt($this->testFeedId1, $timestamp);
 
         // Firestoreに文字列で保存されているか直接確認
@@ -98,10 +96,7 @@ class FirestoreRepositoryTest extends TestCase
         $savedValue = $document->get('updated_at');
         $this->assertIsString($savedValue, 'The saved value should be a string.');
 
-        $date = new DateTime();
-        $date->setTimestamp($timestamp);
-        $date->setTimezone(new DateTimeZone('Asia/Tokyo'));
-        $expectedFormat = $date->format('Y/m/d H:i:s');
+        $expectedFormat = Carbon::createFromTimestamp($timestamp, 'Asia/Tokyo')->format('Y/m/d H:i:s');
         $this->assertEquals($expectedFormat, $savedValue, 'The saved string format is incorrect.');
 
         // getLastUpdatedAtが正しくタイムスタンプを返すか確認

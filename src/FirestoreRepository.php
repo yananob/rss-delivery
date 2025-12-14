@@ -7,8 +7,7 @@ namespace App;
 use Google\Cloud\Firestore\FirestoreClient;
 use Google\Cloud\Firestore\DocumentReference;
 use Google\Cloud\Firestore\CollectionReference;
-use DateTime;
-use DateTimeZone;
+use Carbon\Carbon;
 
 /**
  * Firestoreとのやり取りを行うリポジトリクラス
@@ -82,13 +81,8 @@ class FirestoreRepository
         if ($document->exists()) {
             $updatedAt = $document->get('updated_at');
             if (is_string($updatedAt)) {
-                $date = DateTime::createFromFormat('Y/m/d H:i:s', $updatedAt, new DateTimeZone('Asia/Tokyo'));
-                if ($date) {
-                    return $date->getTimestamp();
-                }
+                return Carbon::createFromFormat('Y/m/d H:i:s', $updatedAt, 'Asia/Tokyo')->getTimestamp();
             }
-            // 互換性のため、int型も許容する
-            return is_int($updatedAt) ? $updatedAt : null;
         }
 
         return null;
@@ -103,10 +97,7 @@ class FirestoreRepository
      */
     public function saveLastUpdatedAt(string $feedId, int $timestamp): void
     {
-        $date = new DateTime();
-        $date->setTimestamp($timestamp);
-        $date->setTimezone(new DateTimeZone('Asia/Tokyo'));
-        $formattedDate = $date->format('Y/m/d H:i:s');
+        $formattedDate = Carbon::createFromTimestamp($timestamp, 'Asia/Tokyo')->format('Y/m/d H:i:s');
 
         $this->getUpdateDocument($feedId)->set([
             'updated_at' => $formattedDate,

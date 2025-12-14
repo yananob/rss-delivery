@@ -4,7 +4,8 @@
         "google/cloud-functions-framework": "^1.4",
         "google/cloud-firestore": "^1.54",
         "laminas/laminas-feed": "^2.20",
-        "monolog/monolog": "^3.9"
+        "monolog/monolog": "^3.9",
+        "nesbot/carbon": "^3.3"
     },
     "require-dev": {
         "phpunit/phpunit": "^11.5",
