@@ -30,9 +30,7 @@ class FirestoreRepositoryTest extends TestCase
         // putenv('FIRESTORE_EMULATOR_HOST=localhost:8080');
 
         // 実際のFirestoreクライアントを使用
-        var_dump(getenv());
-        var_dump(getenv('FIREBASE_CONFIG'));
-        $gcpServiceAccount = json_decode(getenv('FIREBASE_CONFIG'), true);
+        $gcpServiceAccount = json_decode(getenv('FIREBASE_SERVICE_ACCOUNT'), true);
         var_dump($gcpServiceAccount);
         $this->firestore = new FirestoreClient(
             [

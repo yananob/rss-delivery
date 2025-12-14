@@ -29,7 +29,7 @@ class FirestoreRepository
         if ($firestore) {
             self::$client = $firestore;
         } elseif (self::$client === null) {
-            $gcpServiceAccount = json_decode(getenv('FIREBASE_CONFIG'), true);
+            $gcpServiceAccount = json_decode(getenv('FIREBASE_SERVICE_ACCOUNT'), true);
             self::$client = new FirestoreClient(
                 [
                     'keyFile' => $gcpServiceAccount,
