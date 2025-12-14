@@ -13,7 +13,6 @@ class FirestoreRepository
 {
     private const COLLECTION_FEEDS = 'rss_feeds';
     private const COLLECTION_UPDATES = 'updates';
-    private const COLLECTION_LINE_BOTS = 'line_bots';
     private const COLLECTION_RAINDROP = 'raindrop_configs';
 
     private static ?FirestoreClient $client = null;
@@ -105,27 +104,6 @@ class FirestoreRepository
             ->document(self::COLLECTION_UPDATES)
             ->collection(self::COLLECTION_UPDATES)
             ->document($feedId);
-    }
-
-    /**
-     * LINE BOTの設定を取得する
-     *
-     * @param string $botId BOTの識別子
-     * @return array<string, mixed>|null BOT設定情報。存在しない場合はnull
-     */
-    public function getLineBotConfig(string $botId): ?array
-    {
-        $document = $this->collectionRoot
-            ->document(self::COLLECTION_LINE_BOTS)
-            ->collection(self::COLLECTION_LINE_BOTS)
-            ->document($botId)
-            ->snapshot();
-
-        if ($document->exists()) {
-            return $document->data();
-        }
-
-        return null;
     }
 
     /**

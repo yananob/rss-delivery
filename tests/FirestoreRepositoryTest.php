@@ -94,14 +94,4 @@ class FirestoreRepositoryTest extends TestCase
 
         $this->assertEquals($timestamp, $lastUpdatedAt);
     }
-
-    /**
-     * @test
-     */
-    public function test_LINEボットの設定を取得できる(): void
-    {
-        $config = $this->repository->getLineBotConfig('bot_A');
-        $this->assertNotNull($config);
-        $this->assertEquals('dummy_token_for_bot_a', $config['access_token']);
-    }
 }

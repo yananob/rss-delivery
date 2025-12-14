@@ -120,21 +120,19 @@ function saveToRaindrop(array $item, FirestoreRepository $firestoreRepo, Raindro
 function notifyLine(array $feed, array $item, FirestoreRepository $firestoreRepo, LineNotifier $lineNotifier): void
 {
     $botId = $feed['notify_bot'] ?? null;
-    $targetId = $feed['notify_target'] ?? null;
 
-    if (!$botId || !$targetId) {
-        error_log("LINE notification for feed '{$feed['name']}' is missing bot or target ID.");
+    if (!$botId) {
+        error_log("LINE notification for feed '{$feed['name']}' is missing bot ID.");
         return;
     }
 
     // BOT設定からアクセストークンを取得
-    $botConfig = $firestoreRepo->getLineBotConfig($botId);
-    $accessToken = $botConfig['access_token'] ?? null;
+    $lineConfig = json_decode(getenv('FIREBASE_CONFIG'), true);
 
-    if (!$accessToken) {
-        error_log("Access token for LINE bot '{$botId}' not found.");
-        return;
-    }
-
-    $lineNotifier->notify($accessToken, $targetId, $feed['name'], $item);
+    $lineNotifier->notify(
+        $lineConfig->tokens->$botId,
+        $lineConfig->target_ids->$botId,
+        $feed['name'],
+        $item
+    );
 }
