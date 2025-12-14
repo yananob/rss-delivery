@@ -26,11 +26,13 @@ class FirestoreRepositoryTest extends TestCase
         parent::setUp();
 
         // Firestoreエミュレータを使用するように環境変数を設定
-        putenv('FIRESTORE_EMULATOR_HOST=localhost:8080');
+        // putenv('FIRESTORE_EMULATOR_HOST=localhost:8080');
 
+        // 実際のFirestoreクライアントを使用
+        $gcpServiceAccount = json_decode(getenv('FIREBASE_SERVICE_ACCOUNT'), true);
         $this->firestore = new FirestoreClient(
             [
-                'projectId' => 'test-project-id',
+                'keyFile' => $gcpServiceAccount,
             ]
         );
         $this->collectionRoot = $this->firestore->collection(AppConfig::getFirestoreRootCollection());
@@ -51,6 +53,9 @@ class FirestoreRepositoryTest extends TestCase
             'url' => 'https://example.com/integration2.xml',
             'notify_method' => 'Save',
         ]);
+        $this->collectionRoot->document('line_bots')->collection('line_bots')->document('bot_A')->set([
+            'access_token' => 'dummy_token_for_bot_a',
+        ]);
     }
 
     protected function tearDown(): void
@@ -58,8 +63,12 @@ class FirestoreRepositoryTest extends TestCase
         // テストデータをクリーンアップ
         $this->collectionRoot->document(self::COLLECTION_FEEDS)->collection(self::COLLECTION_FEEDS)->document($this->testFeedId1)->delete();
         $this->collectionRoot->document(self::COLLECTION_FEEDS)->collection(self::COLLECTION_FEEDS)->document($this->testFeedId2)->delete();
+        $this->collectionRoot->document('line_bots')->collection('line_bots')->document('bot_A')->delete();
         $this->collectionRoot->document(self::COLLECTION_UPDATES)->collection(self::COLLECTION_UPDATES)->document($this->testFeedId1)->delete();
-        putenv('FIRESTORE_EMULATOR_HOST');
+
+        // // 環境変数を元に戻す
+        // putenv('FIRESTORE_EMULATOR_HOST');
+
         parent::tearDown();
     }
 
