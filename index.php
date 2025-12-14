@@ -2,15 +2,18 @@
 
 require_once __DIR__ . '/vendor/autoload.php';
 
+use App\AppConfig;
 use App\FirestoreRepository;
 use App\LineNotifier;
 use App\RssParser;
 use App\RaindropNotifier;
 use Google\CloudFunctions\FunctionsFramework;
 use CloudEvents\V1\CloudEventInterface;
+use Monolog\Handler\StreamHandler;
+use Monolog\Logger;
 
 // Cloud Functionsのエントリポイントを登録
-FunctionsFramework::cloudEvent('fetchRssAndNotify', 'fetchRssAndNotify');
+FunctionsFramework::cloudEvent('main_event', 'main_event');
 
 /**
  * Pub/SubイベントをトリガーにRSSフィードを取得し、更新があれば通知する
@@ -18,8 +21,12 @@ FunctionsFramework::cloudEvent('fetchRssAndNotify', 'fetchRssAndNotify');
  * @param CloudEventInterface $event
  * @return void
  */
-function fetchRssAndNotify(CloudEventInterface $event): void
+function main_event(CloudEventInterface $event): void
 {
+    $log = new Logger('main_http');
+    $log->pushHandler(new StreamHandler('php://stderr'));
+    $log->info('Function triggered with ' . AppConfig::getEnvironment() . ' environment.');
+
     // 依存関係をインスタンス化
     $firestoreRepo = new FirestoreRepository();
     $rssParser = new RssParser();
