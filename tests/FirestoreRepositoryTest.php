@@ -41,19 +41,19 @@ class FirestoreRepositoryTest extends TestCase
         $this->repository = new FirestoreRepository($this->firestore);
 
         // テストデータを投入
-        $this->firestore->collection('rss-delivery/rss_feeds/rss_feeds')->document(self::$testFeedId1)->set([
+        $this->collectionRoot->document('rss_feeds')->collection('rss_feeds')->document(self::$testFeedId1)->set([
             'name' => 'Integration Test Feed 1',
             'url' => 'https://example.com/integration1.xml',
             'notify_method' => 'LINE',
             'notify_bot' => 'bot_A',
             'notify_target' => 'target_X',
         ]);
-        $this->firestore->collection('rss-delivery/rss_feeds/rss_feeds')->document(self::$testFeedId2)->set([
+        $this->collectionRoot->document('rss_feeds')->collection('rss_feeds')->document(self::$testFeedId2)->set([
             'name' => 'Integration Test Feed 2',
             'url' => 'https://example.com/integration2.xml',
             'notify_method' => 'Save',
         ]);
-        $this->firestore->collection('rss-delivery/line_bots/line_bots')->document('bot_A')->set([
+        $this->collectionRoot->document('line_bots')->collection('line_bots')->document('bot_A')->set([
             'access_token' => 'dummy_token_for_bot_a',
         ]);
     }
@@ -61,10 +61,10 @@ class FirestoreRepositoryTest extends TestCase
     protected function tearDown(): void
     {
         // テストデータをクリーンアップ
-        $this->firestore->collection('rss-delivery/rss_feeds/rss_feeds')->document(self::$testFeedId1)->delete();
-        $this->firestore->collection('rss-delivery/rss_feeds/rss_feeds')->document(self::$testFeedId2)->delete();
-        $this->firestore->collection('rss-delivery/line_bots/line_bots')->document('bot_A')->delete();
-        $this->firestore->collection('rss-delivery/updates/updates')->document(self::$testFeedId1)->delete();
+        $this->collectionRoot->document('rss_feeds')->collection('rss_feeds')->document(self::$testFeedId1)->delete();
+        $this->collectionRoot->document('rss_feeds')->collection('rss_feeds')->document(self::$testFeedId2)->delete();
+        $this->collectionRoot->document('line_bots')->collection('line_bots')->document('bot_A')->delete();
+        $this->collectionRoot->document('updates')->collection('updates')->document(self::$testFeedId1)->delete();
 
         // 環境変数を元に戻す
         putenv('FIRESTORE_EMULATOR_HOST');
