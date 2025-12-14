@@ -11,7 +11,7 @@ use Google\Cloud\Firestore\CollectionReference;
  */
 class FirestoreRepository
 {
-    private const COLLECTION_FEEDS = 'rss_feeds';
+    private const COLLECTION_FEEDS = 'feeds';
     private const COLLECTION_UPDATES = 'updates';
     private const COLLECTION_RAINDROP = 'raindrop_configs';
 
