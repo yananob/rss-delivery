@@ -38,17 +38,17 @@ class FeedProcessor
         }
 
         foreach ($feeds as $feed) {
-            $this->log->debug('Processing single feed: ' . $feed['name'] . ' (ID: ' . $feed['id'] . ')');
+            $this->log->debug('Processing single feed: ' . $feed->getName() . ' (ID: ' . $feed->getId() . ')');
             $this->processSingleFeed($feed);
-            $this->log->debug('Finished processing feed: ' . $feed['name']);
+            $this->log->debug('Finished processing feed: ' . $feed->getName());
         }
     }
 
-    private function processSingleFeed(array $feed): void
+    private function processSingleFeed(Feed $feed): void
     {
-        $feedId = $feed['id'];
-        $feedUrl = $feed['url'];
-        $feedName = $feed['name'];
+        $feedId = $feed->getId();
+        $feedUrl = $feed->getUrl();
+        $feedName = $feed->getName();
         $this->log->info("Processing feed: [{$feedName}] (ID: {$feedId}, URL: {$feedUrl})");
 
         $lastUpdatedAt = $this->firestoreRepo->getLastUpdatedAt($feedId) ?? 0;
@@ -80,12 +80,12 @@ class FeedProcessor
 
         foreach ($newItems as $item) {
             $this->log->info("Processing new item '{$item['title']}' (Updated: {$item['updated_at']}) for feed [{$feedName}].");
-            if ($feed['notify_method'] === 'LINE') {
+            if ($feed->getNotifyMethod() === 'LINE') {
                 $this->notifyLine($feed, $item);
-            } elseif ($feed['notify_method'] === 'Save') {
+            } elseif ($feed->getNotifyMethod() === 'Save') {
                 $this->saveToRaindrop($item);
             } else {
-                $this->log->warning("Unknown notification method '{$feed['notify_method']}' for feed [{$feedName}]. Item '{$item['title']}' not notified.");
+                $this->log->warning("Unknown notification method '{$feed->getNotifyMethod()}' for feed [{$feedName}]. Item '{$item['title']}' not notified.");
             }
 
             $this->firestoreRepo->saveLastUpdatedAt($feedId, $item['updated_at']);
@@ -109,13 +109,13 @@ class FeedProcessor
         $this->log->info("Successfully saved item '{$item['title']}' to Raindrop.io.");
     }
 
-    private function notifyLine(array $feed, array $item): void
+    private function notifyLine(Feed $feed, array $item): void
     {
-        $this->log->info("Attempting to send LINE notification for item '{$item['title']}' for feed '{$feed['name']}'.");
-        $botId = $feed['notify_bot'] ?? null;
+        $this->log->info("Attempting to send LINE notification for item '{$item['title']}' for feed '{$feed->getName()}'.");
+        $botId = $feed->getNotifyBot();
 
         if (!$botId) {
-            $this->log->error("LINE notification for feed '{$feed['name']}' is missing bot ID. Item '{$item['title']}' not notified.");
+            $this->log->error("LINE notification for feed '{$feed->getName()}' is missing bot ID. Item '{$item['title']}' not notified.");
             return;
         }
 
@@ -129,7 +129,7 @@ class FeedProcessor
         $this->lineNotifier->notify(
             $lineConfig['tokens'][$botId],
             $lineConfig['target_ids'][$botId],
-            $feed['name'],
+            $feed->getName(),
             $item
         );
         $this->log->info("Successfully sent LINE notification for item '{$item['title']}'.");

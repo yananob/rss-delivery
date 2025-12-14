@@ -2,6 +2,7 @@
 
 namespace Tests;
 
+use App\Feed;
 use App\FeedProcessor;
 use App\FirestoreRepository;
 use App\LineNotifier;
@@ -39,13 +40,7 @@ class FeedProcessorTest extends TestCase
     public function testProcessAllFeeds_LineNotification()
     {
         $feeds = [
-            [
-                'id' => 'feed1',
-                'name' => 'Test Feed 1',
-                'url' => 'http://example.com/rss1',
-                'notify_method' => 'LINE',
-                'notify_bot' => 'bot1',
-            ],
+            new Feed('feed1', 'Test Feed 1', 'http://example.com/rss1', 'LINE', 'bot1'),
         ];
 
         $items = [
@@ -69,12 +64,7 @@ class FeedProcessorTest extends TestCase
     public function testProcessAllFeeds_RaindropSave()
     {
         $feeds = [
-            [
-                'id' => 'feed2',
-                'name' => 'Test Feed 2',
-                'url' => 'http://example.com/rss2',
-                'notify_method' => 'Save',
-            ],
+            new Feed('feed2', 'Test Feed 2', 'http://example.com/rss2', 'Save', null),
         ];
 
         $items = [
@@ -96,13 +86,7 @@ class FeedProcessorTest extends TestCase
     public function testProcessAllFeeds_NoNewItems()
     {
         $feeds = [
-            [
-                'id' => 'feed3',
-                'name' => 'Test Feed 3',
-                'url' => 'http://example.com/rss3',
-                'notify_method' => 'LINE',
-                'notify_bot' => 'bot1',
-            ],
+            new Feed('feed3', 'Test Feed 3', 'http://example.com/rss3', 'LINE', 'bot1'),
         ];
 
         $items = [

@@ -41,7 +41,7 @@ class FirestoreRepository
     /**
      * RSSフィードの設定を取得する
      *
-     * @return array<int, array<string, mixed>> 設定情報の配列
+     * @return array<int, Feed> 設定情報の配列
      */
     public function getRssFeeds(): array
     {
@@ -54,8 +54,13 @@ class FirestoreRepository
         foreach ($documents as $document) {
             if ($document->exists()) {
                 $feedData = $document->data();
-                $feedData['id'] = $document->id(); // ドキュメントIDをIDとして追加
-                $feeds[] = $feedData;
+                $feeds[] = new Feed(
+                    $document->id(),
+                    $feedData['name'],
+                    $feedData['url'],
+                    $feedData['notify_method'],
+                    $feedData['notify_bot'] ?? null
+                );
             }
         }
         return $feeds;
