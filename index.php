@@ -7,18 +7,18 @@ use App\LineNotifier;
 use App\RssParser;
 use App\RaindropNotifier;
 use Google\CloudFunctions\FunctionsFramework;
-use Psr\Http\Message\ServerRequestInterface;
+use CloudEvents\V1\CloudEventInterface;
 
 // Cloud Functionsのエントリポイントを登録
-FunctionsFramework::http('fetchRssAndNotify', 'fetchRssAndNotify');
+FunctionsFramework::cloudEvent('fetchRssAndNotify', 'fetchRssAndNotify');
 
 /**
- * RSSフィードを取得し、更新があればLINEに通知するHTTP関数
+ * Pub/SubイベントをトリガーにRSSフィードを取得し、更新があれば通知する
  *
- * @param ServerRequestInterface $request
- * @return string
+ * @param CloudEventInterface $event
+ * @return void
  */
-function fetchRssAndNotify(ServerRequestInterface $request): string
+function fetchRssAndNotify(CloudEventInterface $event): void
 {
     // 依存関係をインスタンス化
     $firestoreRepo = new FirestoreRepository();
@@ -26,23 +26,6 @@ function fetchRssAndNotify(ServerRequestInterface $request): string
     $lineNotifier = new LineNotifier();
     $raindropNotifier = new RaindropNotifier();
 
-    // 処理の本体を呼び出す
-    processAllFeeds($firestoreRepo, $rssParser, $lineNotifier, $raindropNotifier);
-
-    return 'Processing complete.';
-}
-
-/**
- * すべてのRSSフィードを処理する
- *
- * @param FirestoreRepository $firestoreRepo
- * @param RssParser $rssParser
- * @param LineNotifier $lineNotifier
- * @param RaindropNotifier $raindropNotifier
- * @return void
- */
-function processAllFeeds(FirestoreRepository $firestoreRepo, RssParser $rssParser, LineNotifier $lineNotifier, RaindropNotifier $raindropNotifier): void
-{
     // 1. FirestoreからRSSフィード設定をすべて取得
     $feeds = $firestoreRepo->getRssFeeds();
 

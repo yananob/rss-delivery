@@ -4,53 +4,104 @@ namespace Tests;
 
 use App\FirestoreRepository;
 use Google\Cloud\Firestore\FirestoreClient;
-use Google\Cloud\Firestore\CollectionReference;
-use Google\Cloud\Firestore\DocumentReference;
-use Google\Cloud\Firestore\DocumentSnapshot;
 use PHPUnit\Framework\TestCase;
 
+/**
+ * @group integration
+ */
 class FirestoreRepositoryTest extends TestCase
 {
+    private FirestoreRepository $repository;
+    private FirestoreClient $firestore;
+    private static string $testFeedId1;
+    private static string $testFeedId2;
+    private static string $projectId = 'test-project';
+
+    public static function setUpBeforeClass(): void
+    {
+        self::$testFeedId1 = 'test-feed-id-1-' . uniqid();
+        self::$testFeedId2 = 'test-feed-id-2-' . uniqid();
+    }
+
+    protected function setUp(): void
+    {
+        // Firestoreエミュレータを使用するように環境変数を設定
+        putenv('FIRESTORE_EMULATOR_HOST=localhost:8080');
+
+        // 実際のFirestoreクライアントを使用
+        $this->firestore = new FirestoreClient(['projectId' => self::$projectId]);
+        $this->repository = new FirestoreRepository($this->firestore);
+
+        // テストデータを投入
+        $this->firestore->collection('rss-delivery/rss_feeds/rss_feeds')->document(self::$testFeedId1)->set([
+            'name' => 'Integration Test Feed 1',
+            'url' => 'https://example.com/integration1.xml',
+            'notify_method' => 'LINE',
+            'notify_bot' => 'bot_A',
+            'notify_target' => 'target_X',
+        ]);
+        $this->firestore->collection('rss-delivery/rss_feeds/rss_feeds')->document(self::$testFeedId2)->set([
+            'name' => 'Integration Test Feed 2',
+            'url' => 'https://example.com/integration2.xml',
+            'notify_method' => 'Save',
+        ]);
+        $this->firestore->collection('rss-delivery/line_bots/line_bots')->document('bot_A')->set([
+            'access_token' => 'dummy_token_for_bot_a',
+        ]);
+    }
+
+    protected function tearDown(): void
+    {
+        // テストデータをクリーンアップ
+        $this->firestore->collection('rss-delivery/rss_feeds/rss_feeds')->document(self::$testFeedId1)->delete();
+        $this->firestore->collection('rss-delivery/rss_feeds/rss_feeds')->document(self::$testFeedId2)->delete();
+        $this->firestore->collection('rss-delivery/line_bots/line_bots')->document('bot_A')->delete();
+        $this->firestore->collection('rss-delivery/updates/updates')->document(self::$testFeedId1)->delete();
+
+        // 環境変数を元に戻す
+        putenv('FIRESTORE_EMULATOR_HOST');
+    }
+
     /**
      * @test
      */
     public function test_RSSフィード設定を正しく取得できる(): void
     {
-        // DocumentSnapshotのモックを作成
-        $snapshot1 = $this->createMock(DocumentSnapshot::class);
-        $snapshot1->method('exists')->willReturn(true);
-        $snapshot1->method('id')->willReturn('feed1');
-        $snapshot1->method('data')->willReturn(['name' => 'Feed 1', 'url' => 'https://example.com/feed1']);
+        $feeds = $this->repository->getRssFeeds();
 
-        $snapshot2 = $this->createMock(DocumentSnapshot::class);
-        $snapshot2->method('exists')->willReturn(true);
-        $snapshot2->method('id')->willReturn('feed2');
-        $snapshot2->method('data')->willReturn(['name' => 'Feed 2', 'url' => 'https://example.com/feed2']);
+        $testFeed1 = null;
+        foreach($feeds as $feed) {
+            if ($feed['id'] === self::$testFeedId1) {
+                $testFeed1 = $feed;
+                break;
+            }
+        }
 
-        // DocumentReferenceのモックを作成 (documents()がスナップショットを返すように)
-        $collectionMock = $this->createMock(CollectionReference::class);
-        $collectionMock->method('documents')->willReturn([$snapshot1, $snapshot2]);
+        $this->assertNotNull($testFeed1, "Test feed 1 should be found.");
+        $this->assertEquals('Integration Test Feed 1', $testFeed1['name']);
+        $this->assertEquals('LINE', $testFeed1['notify_method']);
+    }
 
-        // DocumentReference (root) のモック
-        $docRefMock = $this->createMock(DocumentReference::class);
-        $docRefMock->method('collection')->willReturn($collectionMock);
+    /**
+     * @test
+     */
+    public function test_最終更新日時の保存と取得ができる(): void
+    {
+        $timestamp = time();
+        $this->repository->saveLastUpdatedAt(self::$testFeedId1, $timestamp);
 
-        // CollectionReference (root) のモック
-        $rootColMock = $this->createMock(CollectionReference::class);
-        $rootColMock->method('document')->willReturn($docRefMock);
+        $lastUpdatedAt = $this->repository->getLastUpdatedAt(self::$testFeedId1);
 
-        // FirestoreClientのモックを作成
-        $firestoreClientMock = $this->createMock(FirestoreClient::class);
-        $firestoreClientMock->method('collection')->willReturn($rootColMock);
+        $this->assertEquals($timestamp, $lastUpdatedAt);
+    }
 
-        // テスト対象のクラスをインスタンス化
-        $repository = new FirestoreRepository($firestoreClientMock);
-        $feeds = $repository->getRssFeeds();
-
-        $this->assertCount(2, $feeds);
-        $this->assertEquals('feed1', $feeds[0]['id']);
-        $this->assertEquals('Feed 1', $feeds[0]['name']);
-        $this->assertEquals('feed2', $feeds[1]['id']);
-        $this->assertEquals('Feed 2', $feeds[1]['name']);
+    /**
+     * @test
+     */
+    public function test_LINEボットの設定を取得できる(): void
+    {
+        $config = $this->repository->getLineBotConfig('bot_A');
+        $this->assertNotNull($config);
+        $this->assertEquals('dummy_token_for_bot_a', $config['access_token']);
     }
 }
