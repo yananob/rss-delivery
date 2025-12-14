@@ -17,6 +17,7 @@ class FirestoreRepositoryTest extends TestCase
     private CollectionReference $collectionRoot;
     private string $testFeedId1;
     private string $testFeedId2;
+    private const COLLECTION_FEEDS = 'feeds';
     // private static string $projectId = 'test-project';
 
     // public static function setUpBeforeClass(): void {
@@ -31,7 +32,6 @@ class FirestoreRepositoryTest extends TestCase
 
         // 実際のFirestoreクライアントを使用
         $gcpServiceAccount = json_decode(getenv('FIREBASE_SERVICE_ACCOUNT'), true);
-        var_dump($gcpServiceAccount);
         $this->firestore = new FirestoreClient(
             [
                 'keyFile' => $gcpServiceAccount,
@@ -43,14 +43,14 @@ class FirestoreRepositoryTest extends TestCase
         $this->testFeedId1 = 'test-feed-id-1-' . uniqid();
         $this->testFeedId2 = 'test-feed-id-2-' . uniqid();
         // テストデータを投入
-        $this->collectionRoot->document('rss_feeds')->collection('rss_feeds')->document($this->testFeedId1)->set([
+        $this->collectionRoot->document(self::COLLECTION_FEEDS)->collection(self::COLLECTION_FEEDS)->document($this->testFeedId1)->set([
             'name' => 'Integration Test Feed 1',
             'url' => 'https://example.com/integration1.xml',
             'notify_method' => 'LINE',
             'notify_bot' => 'bot_A',
             'notify_target' => 'target_X',
         ]);
-        $this->collectionRoot->document('rss_feeds')->collection('rss_feeds')->document($this->testFeedId2)->set([
+        $this->collectionRoot->document(self::COLLECTION_FEEDS)->collection(self::COLLECTION_FEEDS)->document($this->testFeedId2)->set([
             'name' => 'Integration Test Feed 2',
             'url' => 'https://example.com/integration2.xml',
             'notify_method' => 'Save',
@@ -63,8 +63,8 @@ class FirestoreRepositoryTest extends TestCase
     protected function tearDown(): void
     {
         // テストデータをクリーンアップ
-        $this->collectionRoot->document('rss_feeds')->collection('rss_feeds')->document($this->testFeedId1)->delete();
-        $this->collectionRoot->document('rss_feeds')->collection('rss_feeds')->document($this->testFeedId2)->delete();
+        $this->collectionRoot->document(self::COLLECTION_FEEDS)->collection(self::COLLECTION_FEEDS)->document($this->testFeedId1)->delete();
+        $this->collectionRoot->document(self::COLLECTION_FEEDS)->collection(self::COLLECTION_FEEDS)->document($this->testFeedId2)->delete();
         $this->collectionRoot->document('line_bots')->collection('line_bots')->document('bot_A')->delete();
         $this->collectionRoot->document('updates')->collection('updates')->document($this->testFeedId1)->delete();
 
@@ -83,15 +83,15 @@ class FirestoreRepositoryTest extends TestCase
 
         $testFeed1 = null;
         foreach($feeds as $feed) {
-            if ($feed['id'] === $this->testFeedId1) {
+            if ($feed->getId() === $this->testFeedId1) {
                 $testFeed1 = $feed;
                 break;
             }
         }
 
         $this->assertNotNull($testFeed1, "Test feed 1 should be found.");
-        $this->assertEquals('Integration Test Feed 1', $testFeed1['name']);
-        $this->assertEquals('LINE', $testFeed1['notify_method']);
+        $this->assertEquals('Integration Test Feed 1', $testFeed1->getName());
+        $this->assertEquals('LINE', $testFeed1->getNotifyMethod());
     }
 
     /**
