@@ -27,7 +27,7 @@ FunctionsFramework::cloudEvent('main_event', 'main_event');
 function main_event(CloudEventInterface $event): void
 {
     $log = new Logger('main_event_logger');
-    $log->pushHandler(new StreamHandler('php://stderr'));
+    $log->pushHandler(new StreamHandler('php://stderr', Logger::INFO));
     $log->info('Function main_event triggered with ' . AppConfig::getEnvironment() . ' environment.');
 
     // 依存関係をインスタンス化
