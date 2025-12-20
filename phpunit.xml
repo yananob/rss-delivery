@@ -10,14 +10,6 @@
         <env name="RAINDROP_KEY" value='test-raindrop-key'/>
     </php>
 
-    <testsuites>
-        <testsuite name="Unit">
-            <file>./tests/FeedProcessorTest.php</file>
-            <file>./tests/LineNotifierTest.php</file>
-            <file>./tests/RssParserTest.php</file>
-        </testsuite>
-    </testsuites>
-
     <source>
         <include>
             <directory>./src</directory>
