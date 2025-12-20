@@ -122,6 +122,15 @@ class FeedProcessor
 
     private function notifyLine(Feed $feed, array $item): void
     {
+        // JSTで7時から22時の間のみ通知する
+        $now = $this->getCurrentTime();
+        $hour = (int)$now->format('H');
+
+        if ($hour < 7 || $hour > 22) {
+            $this->log->info("Skipping LINE notification for '{$item['title']}' due to off-hours in JST.");
+            return;
+        }
+
         $this->log->info("Attempting to send LINE notification for item '{$item['title']}' for feed '{$feed->getName()}'.");
         $botId = $feed->getNotifyBot();
 
@@ -147,5 +156,10 @@ class FeedProcessor
         } else {
             $this->log->error("Failed to send LINE notification for item '{$item['title']}'.");
         }
+    }
+
+    protected function getCurrentTime(): \DateTime
+    {
+        return new \DateTime('now', new \DateTimeZone('Asia/Tokyo'));
     }
 }

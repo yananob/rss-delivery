@@ -2,7 +2,8 @@
 <phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/11.0/phpunit.xsd"
          colors="true"
-         displayDetailsOnPhpunitDeprecations="true" 
+         displayDetailsOnPhpunitDeprecations="true"
+         defaultTestSuite="Unit"
 >
     <php>
         <env name="APP_ENV" value="local"/>
@@ -11,8 +12,12 @@
     </php>
 
     <testsuites>
-        <testsuite name="Application">
+        <testsuite name="Unit">
             <directory>./tests</directory>
+            <exclude>./tests/FirestoreRepositoryTest.php</exclude>
+        </testsuite>
+        <testsuite name="Integration">
+            <file>./tests/FirestoreRepositoryTest.php</file>
         </testsuite>
     </testsuites>
     
