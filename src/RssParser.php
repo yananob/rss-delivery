@@ -7,6 +7,8 @@ namespace App;
 use Laminas\Feed\Reader\Reader;
 use Laminas\Feed\Reader\Exception\RuntimeException;
 use DateTimeInterface;
+use GuzzleHttp\Client;
+use GuzzleHttp\Exception\RequestException;
 
 /**
  * RSSフィードを解析するクラス
@@ -14,14 +16,17 @@ use DateTimeInterface;
 class RssParser
 {
     private Reader $reader;
+    private Client $httpClient;
 
     /**
      * コンストラクタ
      * @param Reader|null $reader laminas-feedのReaderインスタンス
+     * @param Client|null $httpClient Guzzle HTTPクライアントインスタンス
      */
-    public function __construct(Reader $reader = null)
+    public function __construct(Reader $reader = null, Client $httpClient = null)
     {
         $this->reader = $reader ?: new Reader();
+        $this->httpClient = $httpClient ?: new Client();
     }
 
     /**
@@ -33,11 +38,15 @@ class RssParser
     public function parse(string $url): array
     {
         try {
-            $feedContent = file_get_contents($url);
-            if ($feedContent === false) {
+            $response = $this->httpClient->get($url);
+            $feedContent = (string) $response->getBody();
+            if (empty($feedContent)) {
                 throw new RuntimeException("Failed to fetch feed content from {$url}");
             }
             return $this->parseString($feedContent);
+        } catch (RequestException $e) {
+            error_log('Failed to fetch RSS feed (network error): ' . $url . ' - ' . $e->getMessage());
+            return [];
         } catch (\Exception $e) {
             error_log('Failed to parse RSS feed: ' . $url . ' - ' . $e->getMessage());
             return [];

@@ -5,7 +5,8 @@
         "google/cloud-firestore": "^1.54",
         "laminas/laminas-feed": "^2.20",
         "monolog/monolog": "^3.9",
-        "nesbot/carbon": "^3.3"
+        "nesbot/carbon": "^3.3",
+        "guzzlehttp/guzzle": "^7.8"
     },
     "require-dev": {
         "phpunit/phpunit": "^11.5",

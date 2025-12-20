@@ -5,6 +5,10 @@ namespace Tests;
 
 use App\RssParser;
 use PHPUnit\Framework\TestCase;
+use GuzzleHttp\Client;
+use GuzzleHttp\Handler\MockHandler;
+use GuzzleHttp\HandlerStack;
+use GuzzleHttp\Psr7\Response;
 
 class RssParserTest extends TestCase
 {
@@ -47,6 +51,42 @@ XML;
         $this->assertEquals('https://example.com/entry2', $result[1]['link']);
         $this->assertEquals('記事の概要2', $result[1]['description']);
         $this->assertEquals(strtotime('2023-01-02 12:00:00'), $result[1]['updated_at']);
+    }
+
+    public function test_parseメソッドがGuzzleでRSSフィードを正しく取得できる(): void
+    {
+        $rssContent = <<<XML
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+<channel>
+  <title>Guzzleテストフィード</title>
+  <link>https://example.com/guzzle</link>
+  <description>Guzzle経由で取得されたテストフィードです。</description>
+  <item>
+    <title>Guzzle記事1</title>
+    <link>https://example.com/guzzle_entry1</link>
+    <description><![CDATA[Guzzleで取得した記事の概要1]]></description>
+    <pubDate>Wed, 01 Mar 2023 10:00:00 +0000</pubDate>
+  </item>
+</channel>
+</rss>
+XML;
+
+        $mock = new MockHandler([
+            new Response(200, [], $rssContent),
+        ]);
+
+        $handlerStack = HandlerStack::create($mock);
+        $httpClient = new Client(['handler' => $handlerStack]);
+
+        $parser = new RssParser(null, $httpClient);
+        $result = $parser->parse('https://example.com/guzzle_feed');
+
+        $this->assertCount(1, $result);
+        $this->assertEquals('Guzzle記事1', $result[0]['title']);
+        $this->assertEquals('https://example.com/guzzle_entry1', $result[0]['link']);
+        $this->assertEquals('Guzzleで取得した記事の概要1', $result[0]['description']);
+        $this->assertEquals(strtotime('2023-03-01 10:00:00'), $result[0]['updated_at']);
     }
 
   public function test_RSS_1_0フィードを正しく解析できる(): void
