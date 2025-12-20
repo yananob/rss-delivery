@@ -10,6 +10,12 @@
         <env name="RAINDROP_KEY" value='test-raindrop-key'/>
     </php>
 
+    <testsuites>
+        <testsuite name="Application">
+            <directory>./tests</directory>
+        </testsuite>
+    </testsuites>
+    
     <source>
         <include>
             <directory>./src</directory>
