@@ -1,0 +1,47 @@
+name: Deploy Cloud Functions (test)
+on:
+  push:
+    branches:
+      - test
+  pull_request:
+    types:
+      - 'opened'
+      - 'synchronize'
+      - 'edited'
+      - 'reopened'
+  workflow_dispatch:
+
+concurrency:
+  group: oml-deploy-test
+
+permissions:
+  contents: 'read'
+  id-token: 'write'
+
+jobs:
+  deploy:
+    uses: yananob/cloud-functions-common/.github/workflows/deploy-cloud-functions.yaml@main
+    with:
+      function_name: 'oml-test'
+      project_id: 'nobu5-393106'
+      region: 'us-west1'
+      service_account_name: 'cloud-run-functions-deployer'
+      gcp_project_number: '1035100650942'
+      wip_pool_name: 'github-actions-pool'
+      wip_provider_name: 'github-provider'
+      secrets_project_id: 'nobu5-393106'
+      secrets_config: |-
+        FIREBASE_CONFIG
+        FIREBASE_CONFIG_READ
+        LINE_TOKENS_N_TARGETS
+        OPENAI_KEY_OML
+      gcs_source_dir: ./public/
+      gcs_bucket_name: oml-static
+      gcs_bucket_path: test
+      disable_gcs_cache: true
+      deploy_http_trigger: true
+      deploy_event_trigger: true
+      http_max_instance_count: 2
+      memory: '512M'
+      http_timeout: '5m'
+      event_timeout: '20m'
