@@ -42,7 +42,10 @@ class FeedProcessor
         $feedName = $feed->getName();
         $this->log->info("Processing feed: [{$feedName}] (ID: {$feedId}, URL: {$feedUrl})");
 
-        $lastUpdatedAt = $this->firestoreRepo->getLastUpdatedAt($feedId) ?? 0;
+        // lastUpdatedAtがnullの場合、初回実行と判断する
+        $rawLastUpdatedAt = $this->firestoreRepo->getLastUpdatedAt($feedId);
+        $isFirstRun = ($rawLastUpdatedAt === null);
+        $lastUpdatedAt = $rawLastUpdatedAt ?? 0;
         $this->log->debug("Last updated timestamp for [{$feedName}]: {$lastUpdatedAt}");
 
         $this->log->debug("Parsing RSS feed from URL: {$feedUrl}");
@@ -63,11 +66,29 @@ class FeedProcessor
             return;
         }
 
-        $this->log->info(count($newItems) . " new items found for feed [{$feedName}].");
+        $newItemsCount = count($newItems);
+        $this->log->info("{$newItemsCount} new items found for feed [{$feedName}].");
 
         usort($newItems, function ($a, $b) {
             return $a['updated_at'] <=> $b['updated_at'];
         });
+
+        // 常に最新の記事の日時を保存する
+        $latestItemTimestamp = end($newItems)['updated_at'];
+        $this->firestoreRepo->saveLastUpdatedAt($feedId, $latestItemTimestamp);
+        $this->log->debug("Saved last updated timestamp ({$latestItemTimestamp}) for feed [{$feedName}].");
+
+        // 初回実行時は通知をスキップ
+        if ($isFirstRun) {
+            $this->log->info("First run for feed '{$feedName}'. Skipping notification process.");
+            return;
+        }
+
+        // 新規アイテムが20件を超える場合は通知をスキップ
+        if ($newItemsCount > 20) {
+            $this->log->info("Too many new items ({$newItemsCount}) for feed '{$feedName}'. Skipping notification process to avoid flooding.");
+            return;
+        }
 
         foreach ($newItems as $item) {
             $this->log->info("Processing new item '{$item['title']}' (Updated: {$item['updated_at']}) for feed [{$feedName}].");
@@ -78,9 +99,6 @@ class FeedProcessor
             } else {
                 $this->log->warning("Unknown notification method '{$feed->getNotifyMethod()}' for feed [{$feedName}]. Item '{$item['title']}' not notified.");
             }
-
-            $this->firestoreRepo->saveLastUpdatedAt($feedId, $item['updated_at']);
-            $this->log->debug("Saved last updated timestamp ({$item['updated_at']}) for feed [{$feedName}].");
         }
         $this->log->info("Finished processing all new items for feed [{$feedName}].");
     }
