@@ -12,7 +12,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: oml-deploy-test
+  group: rss-delivery-deploy-test
 
 permissions:
   contents: 'read'
@@ -22,7 +22,7 @@ jobs:
   deploy:
     uses: yananob/cloud-functions-common/.github/workflows/deploy-cloud-functions.yaml@main
     with:
-      function_name: 'oml-test'
+      function_name: 'rss-delivery-test'
       project_id: 'nobu5-393106'
       region: 'us-west1'
       service_account_name: 'cloud-run-functions-deployer'
@@ -31,17 +31,12 @@ jobs:
       wip_provider_name: 'github-provider'
       secrets_project_id: 'nobu5-393106'
       secrets_config: |-
-        FIREBASE_CONFIG
-        FIREBASE_CONFIG_READ
+        FIREBASE_SERVICE_ACCOUNT
         LINE_TOKENS_N_TARGETS
-        OPENAI_KEY_OML
-      gcs_source_dir: ./public/
-      gcs_bucket_name: oml-static
-      gcs_bucket_path: test
-      disable_gcs_cache: true
-      deploy_http_trigger: true
+        RAINDROP_KEY
+      deploy_http_trigger: false
       deploy_event_trigger: true
-      http_max_instance_count: 2
-      memory: '512M'
+      http_max_instance_count: 1
+      memory: '256M'
       http_timeout: '5m'
       event_timeout: '20m'
