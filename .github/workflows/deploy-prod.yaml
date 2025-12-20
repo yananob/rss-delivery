@@ -33,4 +33,4 @@ jobs:
       http_max_instance_count: 1
       memory: '256M'
       http_timeout: '5m'
-      event_timeout: '20m'
+      event_timeout: '5m'
