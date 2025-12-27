@@ -57,4 +57,38 @@ class LineNotifierTest extends TestCase
 
         $this->assertFalse($result);
     }
+
+    public function test_HTMLタグとエンティティが正しく処理される(): void
+    {
+        // GuzzleのClientをモック
+        $clientMock = $this->createMock(Client::class);
+        $clientMock->expects($this->once())
+            ->method('post')
+            ->with(
+                'https://api.line.me/v2/bot/message/push',
+                $this->callback(function ($options) {
+                    $expectedMessage = <<<EOT
+テストフィード
+【Test & Title】
+This is a description with a link & some bold text.
+https://example.com/test-html
+EOT;
+                    $this->assertEquals($expectedMessage, $options['json']['messages'][0]['text']);
+                    return true;
+                })
+            )
+            ->willReturn(new Response(200));
+
+        $notifier = new LineNotifier($clientMock);
+
+        $item = [
+            'title' => '<b>Test &amp; Title</b>',
+            'description' => '<p>This is a description with a <a href="#">link</a> &amp; some bold text.</p>',
+            'link' => 'https://example.com/test-html'
+        ];
+
+        $result = $notifier->notify('test_token', 'test_target_id', 'テストフィード', $item);
+
+        $this->assertTrue($result);
+    }
 }

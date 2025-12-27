@@ -70,7 +70,7 @@ class LineNotifier
      */
     private function buildMessage(string $feedName, array $item): string
     {
-        $title = $item['title'] ?? '（タイトルなし）';
+        $title = html_entity_decode(strip_tags($item['title'] ?? '（タイトルなし）'));
         $description = $this->truncateDescription($item['description'] ?? '');
         $link = $item['link'] ?? '';
 
@@ -83,7 +83,7 @@ EOT;
     }
 
     /**
-     * 概要を指定された文字数で切り詰め、HTMLタグを除去する
+     * 概要を指定された文字数で切り詰め、HTMLタグを除去し、HTMLエンティティをデコードする
      *
      * @param string $description
      * @param int $length
@@ -91,7 +91,8 @@ EOT;
      */
     private function truncateDescription(string $description, int $length = 200): string
     {
-        $description = strip_tags($description); // HTMLタグを除去
+        // HTMLタグを除去し、HTMLエンティティをデコード
+        $description = html_entity_decode(strip_tags($description));
         if (mb_strlen($description) > $length) {
             return mb_substr($description, 0, $length) . '...';
         }
