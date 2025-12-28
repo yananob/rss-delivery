@@ -1,0 +1,82 @@
+name: Run test
+
+on:
+  # pull_request:
+  #   types: [opened, reopened, synchronize]
+  push:
+    branches:
+      # - main
+      - test
+
+  schedule:
+    - cron:  '45 21 * * 5'
+  workflow_dispatch:
+
+concurrency:
+  group: rss-delivery-run-test
+
+defaults:
+  run:
+    working-directory: .
+
+permissions:
+  contents: 'read'
+  id-token: 'write'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      GRPC_VERBOSITY: ERROR  # GRPCのログ出力を抑止
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: 'true'
+
+    - name: Set up PHP 8.2
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: "8.2"
+        extensions: grpc
+
+    - name: Validate composer.json and composer.lock
+      run: composer validate
+
+    - name: Get current directory
+      id: current_dir
+      run: echo "CURRENT_DIR=$(pwd)" >> $GITHUB_OUTPUT
+
+    - name: Cache Composer packages
+      id: composer-cache
+      uses: actions/cache@v4
+      with:
+        path: ${{ steps.current_dir.outputs.CURRENT_DIR }}/vendor
+        key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-php-
+
+    # - name: Cache NPM packages
+    #   id: npm-cache
+    #   uses: actions/cache@v4
+    #   with:
+    #     path: ${{ steps.current_dir.outputs.CURRENT_DIR }}/node_modules
+    #     key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
+    #     restore-keys: |
+    #       ${{ runner.os }}-npm-
+
+    - name: Install dependencies (Composer)
+      run: composer install --prefer-dist --no-progress
+    
+    # - name: Install dependencies (NPM)
+    #   run: npm install --prefer-offline --no-audit --progress=false
+
+    - name: Google Cloud認証
+      id: 'auth'
+      uses: 'google-github-actions/auth@v2'
+      with:
+        workload_identity_provider: 'projects/1035100650942/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider'
+        service_account: 'cloud-run-functions-deployer@nobu5-393106.iam.gserviceaccount.com'
+
+    - name: Test with phpunit
+      run: bash tests/run_tests.sh

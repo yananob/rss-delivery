@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/11.0/phpunit.xsd"
+         colors="true"
+         displayDetailsOnPhpunitDeprecations="true" 
+>
+    <php>
+        <env name="APP_ENV" value="local"/>
+        <env name="LINE_TOKENS_N_TARGETS" value='{"tokens":{"test_bot":"dummy_token"},"target_ids":{"test_bot":"dummy_target"}}'/>
+        <env name="RAINDROP_KEY" value='test-raindrop-key'/>
+    </php>
+
+    <testsuites>
+        <testsuite name="Application">
+            <directory>./tests</directory>
+        </testsuite>
+    </testsuites>
+    
+    <source>
+        <include>
+            <directory>./src</directory>
+        </include>
+    </source>
+</phpunit>
