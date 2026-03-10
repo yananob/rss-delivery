@@ -42,17 +42,27 @@ function main_http(ServerRequestInterface $request): ResponseInterface
     $blade = new BladeOne($views, $cache, $mode);
     $repository = new FirestoreRepository();
 
-    $path = $request->getUri()->getPath();
+    $basePath = AppConfig::getBasePath();
+    $fullPath = $request->getUri()->getPath();
+    $path = $fullPath;
+
+    if ($basePath !== '' && strpos($fullPath, $basePath) === 0) {
+        $path = substr($fullPath, strlen($basePath));
+        if ($path === '') {
+            $path = '/';
+        }
+    }
+
     $method = $request->getMethod();
 
     try {
         if ($path === '/' && $method === 'GET') {
             $feeds = $repository->getRssFeeds();
-            return new Response(200, [], $blade->run('index', ['feeds' => $feeds]));
+            return new Response(200, [], $blade->run('index', ['feeds' => $feeds, 'basePath' => $basePath]));
         }
 
         if ($path === '/new' && $method === 'GET') {
-            return new Response(200, [], $blade->run('edit', ['feed' => null]));
+            return new Response(200, [], $blade->run('edit', ['feed' => null, 'basePath' => $basePath]));
         }
 
         if ($path === '/new' && $method === 'POST') {
@@ -67,7 +77,7 @@ function main_http(ServerRequestInterface $request): ResponseInterface
                 'notify_method' => $params['notify_method'],
                 'notify_bot' => $params['notify_bot'] ?? null,
             ]);
-            return new Response(302, ['Location' => '/']);
+            return new Response(302, ['Location' => $basePath . '/']);
         }
 
         if (preg_match('#^/edit/([^/]+)$#', $path, $matches) && $method === 'GET') {
@@ -76,7 +86,7 @@ function main_http(ServerRequestInterface $request): ResponseInterface
             if (!$feed) {
                 return new Response(404, [], 'Feed not found');
             }
-            return new Response(200, [], $blade->run('edit', ['feed' => $feed]));
+            return new Response(200, [], $blade->run('edit', ['feed' => $feed, 'basePath' => $basePath]));
         }
 
         if (preg_match('#^/edit/([^/]+)$#', $path, $matches) && $method === 'POST') {
@@ -92,13 +102,13 @@ function main_http(ServerRequestInterface $request): ResponseInterface
                 'notify_method' => $params['notify_method'],
                 'notify_bot' => $params['notify_bot'] ?? null,
             ]);
-            return new Response(302, ['Location' => '/']);
+            return new Response(302, ['Location' => $basePath . '/']);
         }
 
         if (preg_match('#^/delete/([^/]+)$#', $path, $matches) && $method === 'POST') {
             $id = $matches[1];
             $repository->deleteFeed($id);
-            return new Response(302, ['Location' => '/']);
+            return new Response(302, ['Location' => $basePath . '/']);
         }
 
         return new Response(404, [], 'Not Found');
