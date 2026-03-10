@@ -40,3 +40,7 @@ jobs:
       memory: '256M'
       http_timeout: '5m'
       event_timeout: '5m'
+    secrets:
+      GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+      GCP_REGION: ${{ secrets.GCP_REGION }}
+      GCP_PROJECT_NUMBER: ${{ secrets.GCP_PROJECT_NUMBER }}
