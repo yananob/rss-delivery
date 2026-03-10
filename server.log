@@ -1,0 +1,40 @@
+[Tue Mar 10 10:50:55 2026] PHP 8.4.18 Development Server (http://localhost:8080) started
+[Tue Mar 10 10:50:57 2026] [::1]:59744 Accepted
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1773139858.017956   23168 call_credentials.c:168] GRPC_PHP: call credentials plugin function - begin
+I0000 00:00:1773139858.018178   23168 call_credentials.c:171] GRPC_PHP: call credentials plugin function - end
+[Tue Mar 10 10:50:58 2026] PHP Fatal error:  Uncaught Error: Maximum call stack size of 8339456 bytes (zend.max_allowed_stack_size - zend.reserved_stack_size) reached. Infinite recursion? in /app/vendor/google/gax/src/CredentialsWrapper.php:244
+Stack trace:
+#0 [internal function]: Google\ApiCore\CredentialsWrapper->{closure:Google\ApiCore\CredentialsWrapper::getAuthorizationHeaderCallback():244}()
+#1 /app/vendor/grpc/grpc/src/lib/ServerStreamingCall.php(43): Grpc\Call->startBatch()
+#2 /app/vendor/grpc/grpc/src/lib/BaseStub.php(368): Grpc\ServerStreamingCall->start()
+#3 /app/vendor/grpc/grpc/src/lib/BaseStub.php(593): Grpc\BaseStub->{closure:Grpc\BaseStub::_GrpcUnaryStream():346}()
+#4 /app/vendor/google/gax/src/Transport/GrpcTransport.php(242): Grpc\BaseStub->_serverStreamRequest()
+#5 /app/vendor/google/gax/src/Middleware/TransportCallMiddleware.php(58): Google\ApiCore\Transport\GrpcTransport->startServerStreamingCall()
+#6 /app/vendor/google/gax/src/Middleware/CredentialsWrapperMiddleware.php(62): Google\ApiCore\Middleware\TransportCallMiddleware->__invoke()
+#7 /app/vendor/google/gax/src/Middleware/FixedHeaderMiddleware.php(69): Google\ApiCore\Middleware\CredentialsWrapperMiddleware->__invoke()
+#8 /app/vendor/google/gax/src/Middleware/RetryMiddleware.php(96): Google\ApiCore\Middleware\FixedHeaderMiddleware->__invoke()
+#9 /app/vendor/google/gax/src/Middleware/RequestAutoPopulationMiddleware.php(73): Google\ApiCore\Middleware\RetryMiddleware->__invoke()
+#10 /app/vendor/google/gax/src/Middleware/OptionsFilterMiddleware.php(62): Google\ApiCore\Middleware\RequestAutoPopulationMiddleware->__invoke()
+#11 /app/vendor/google/gax/src/GapicClientTrait.php(669): Google\ApiCore\Middleware\OptionsFilterMiddleware->__invoke()
+#12 /app/vendor/google/cloud-firestore/src/V1/Gapic/FirestoreGapicClient.php(1322): Google\Cloud\Firestore\V1\Gapic\FirestoreGapicClient->startCall()
+#13 [internal function]: Google\Cloud\Firestore\V1\Gapic\FirestoreGapicClient->runQuery()
+#14 /app/vendor/google/cloud-core/src/ExponentialBackoff.php(97): call_user_func_array()
+#15 /app/vendor/google/cloud-core/src/GrpcRequestWrapper.php(134): Google\Cloud\Core\ExponentialBackoff->execute()
+#16 /app/vendor/google/cloud-core/src/GrpcTrait.php(79): Google\Cloud\Core\GrpcRequestWrapper->send()
+#17 /app/vendor/google/cloud-firestore/src/Connection/Grpc.php(258): Google\Cloud\Firestore\Connection\Grpc->send()
+#18 /app/vendor/google/cloud-firestore/src/Query.php(342): Google\Cloud\Firestore\Connection\Grpc->runQuery()
+#19 [internal function]: Google\Cloud\Firestore\Query->{closure:Google\Cloud\Firestore\Query::documents():340}()
+#20 /app/vendor/google/cloud-core/src/ExponentialBackoff.php(97): call_user_func_array()
+#21 /app/vendor/google/cloud-firestore/src/Query.php(340): Google\Cloud\Core\ExponentialBackoff->execute()
+#22 /app/src/FirestoreRepository.php(66): Google\Cloud\Firestore\Query->documents()
+#23 /app/index.php(50): App\FirestoreRepository->getRssFeeds()
+#24 [internal function]: main_http()
+#25 /app/vendor/google/cloud-functions-framework/src/HttpFunctionWrapper.php(63): call_user_func()
+#26 /app/vendor/google/cloud-functions-framework/src/Invoker.php(91): Google\CloudFunctions\HttpFunctionWrapper->execute()
+#27 /app/vendor/google/cloud-functions-framework/router.php(63): Google\CloudFunctions\Invoker->handle()
+#28 /app/vendor/google/cloud-functions-framework/router.php(65): {closure:/app/vendor/google/cloud-functions-framework/router.php:54}()
+#29 /app/vendor/bin/router.php(18): include('...')
+#30 {main}
+  thrown in /app/vendor/google/gax/src/CredentialsWrapper.php on line 244
+[Tue Mar 10 10:50:58 2026] [::1]:59744 Closing

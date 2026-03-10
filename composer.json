@@ -9,7 +9,8 @@
         "laminas/laminas-feed": "^2.20",
         "monolog/monolog": "^3.9",
         "nesbot/carbon": "^3.3",
-        "guzzlehttp/guzzle": "^7.8"
+        "guzzlehttp/guzzle": "^7.8",
+        "eftec/bladeone": "^4.0"
     },
     "require-dev": {
         "phpunit/phpunit": "^11.5",

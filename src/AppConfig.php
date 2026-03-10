@@ -20,7 +20,7 @@ class AppConfig
      */
     public static function getEnvironment(): string
     {
-        return getenv('APP_ENV');
+        return getenv('APP_ENV') ?: 'local';
     }
 
     /**
