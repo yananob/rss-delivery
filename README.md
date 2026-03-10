@@ -2,6 +2,9 @@
 
 指定されたRSSフィードを定期的に取得し、更新があった場合にLINEや指定されたWebサービスに内容を配信するCloud Functionsアプリケーションです。
 
+## 実装方針
+- docs/implementation_policy.md を参照する。
+
 ## 開発環境のセットアップ
 
 ### 前提条件
