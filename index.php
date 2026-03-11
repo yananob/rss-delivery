@@ -42,20 +42,21 @@ function main_http(ServerRequestInterface $request): ResponseInterface
     $blade = new BladeOne($views, $cache, $mode);
     $repository = new FirestoreRepository();
 
+    $basePath = AppConfig::getBasePath();
     $path = $request->getUri()->getPath();
     $method = $request->getMethod();
 
     try {
-        if ($path === '/' && $method === 'GET') {
+        if (($path === $basePath . '/' || $path === $basePath) && $method === 'GET') {
             $feeds = $repository->getRssFeeds();
-            return new Response(200, [], $blade->run('index', ['feeds' => $feeds]));
+            return new Response(200, [], $blade->run('index', ['feeds' => $feeds, 'basePath' => $basePath]));
         }
 
-        if ($path === '/new' && $method === 'GET') {
-            return new Response(200, [], $blade->run('edit', ['feed' => null]));
+        if ($path === $basePath . '/new' && $method === 'GET') {
+            return new Response(200, [], $blade->run('edit', ['feed' => null, 'basePath' => $basePath]));
         }
 
-        if ($path === '/new' && $method === 'POST') {
+        if ($path === $basePath . '/new' && $method === 'POST') {
             $params = $request->getParsedBody();
             if (empty($params['name']) || empty($params['url']) || empty($params['notify_method'])) {
                 return new Response(400, [], 'Missing required parameters');
@@ -67,19 +68,19 @@ function main_http(ServerRequestInterface $request): ResponseInterface
                 'notify_method' => $params['notify_method'],
                 'notify_bot' => $params['notify_bot'] ?? null,
             ]);
-            return new Response(302, ['Location' => '/']);
+            return new Response(302, ['Location' => $basePath . '/']);
         }
 
-        if (preg_match('#^/edit/([^/]+)$#', $path, $matches) && $method === 'GET') {
+        if (preg_match('#^' . preg_quote($basePath, '#') . '/edit/([^/]+)$#', $path, $matches) && $method === 'GET') {
             $id = $matches[1];
             $feed = $repository->getFeed($id);
             if (!$feed) {
                 return new Response(404, [], 'Feed not found');
             }
-            return new Response(200, [], $blade->run('edit', ['feed' => $feed]));
+            return new Response(200, [], $blade->run('edit', ['feed' => $feed, 'basePath' => $basePath]));
         }
 
-        if (preg_match('#^/edit/([^/]+)$#', $path, $matches) && $method === 'POST') {
+        if (preg_match('#^' . preg_quote($basePath, '#') . '/edit/([^/]+)$#', $path, $matches) && $method === 'POST') {
             $id = $matches[1];
             $params = $request->getParsedBody();
             if (empty($params['name']) || empty($params['url']) || empty($params['notify_method'])) {
@@ -92,13 +93,13 @@ function main_http(ServerRequestInterface $request): ResponseInterface
                 'notify_method' => $params['notify_method'],
                 'notify_bot' => $params['notify_bot'] ?? null,
             ]);
-            return new Response(302, ['Location' => '/']);
+            return new Response(302, ['Location' => $basePath . '/']);
         }
 
-        if (preg_match('#^/delete/([^/]+)$#', $path, $matches) && $method === 'POST') {
+        if (preg_match('#^' . preg_quote($basePath, '#') . '/delete/([^/]+)$#', $path, $matches) && $method === 'POST') {
             $id = $matches[1];
             $repository->deleteFeed($id);
-            return new Response(302, ['Location' => '/']);
+            return new Response(302, ['Location' => $basePath . '/']);
         }
 
         return new Response(404, [], 'Not Found');
