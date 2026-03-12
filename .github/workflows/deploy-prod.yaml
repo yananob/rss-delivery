@@ -35,4 +35,4 @@ jobs:
       http_timeout: '5m'
       event_timeout: '5m'
       environment_variables: |-
-        APP_ENV=test
+        APP_ENV=production
