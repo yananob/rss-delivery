@@ -61,3 +61,4 @@ $firestore = new FirestoreClient([
   - クラス名は `PascalCase`。
 - **デプロイとシークレット**:
   デプロイは GitHub Actions (`.github/workflows/deploy-*.yaml`) で自動化します。機密性の高い環境変数（`FIREBASE_SERVICE_ACCOUNT` 等）は、GitHub Secrets に保存され、デプロイ時に Cloud Functions の環境変数として設定されます。
+- 処理状況が分かるように、適宜ログを出力する。ログ出力には monolog を使う。
