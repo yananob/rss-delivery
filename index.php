@@ -46,6 +46,8 @@ function main_http(ServerRequestInterface $request): ResponseInterface
     $path = $request->getUri()->getPath();
     $method = $request->getMethod();
 
+    error_log("Request: $method $path (basePath: $basePath)");
+
     try {
         if (($path === $basePath . '/' || $path === $basePath) && $method === 'GET') {
             $feeds = $repository->getRssFeeds();
@@ -102,6 +104,7 @@ function main_http(ServerRequestInterface $request): ResponseInterface
             return new Response(302, ['Location' => $basePath . '/']);
         }
 
+        error_log("Route not found: $method $path");
         return new Response(404, [], 'Not Found');
     } catch (\Exception $e) {
         $errorMessage = AppConfig::getEnvironment() === 'production' ? 'Internal Server Error' : 'Error: ' . $e->getMessage();
