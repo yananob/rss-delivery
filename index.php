@@ -45,8 +45,9 @@ function main_http(ServerRequestInterface $request): ResponseInterface
     $basePath = AppConfig::getBasePath();
     $path = $request->getUri()->getPath();
     $method = $request->getMethod();
+    $env = AppConfig::getEnvironment();
 
-    error_log("Request: $method $path (basePath: $basePath)");
+    error_log("Request: $method $path (basePath: $basePath, env: $env)");
 
     try {
         if (($path === $basePath . '/' || $path === $basePath) && $method === 'GET') {
