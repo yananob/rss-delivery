@@ -45,18 +45,33 @@ function main_http(ServerRequestInterface $request): ResponseInterface
     $basePath = AppConfig::getBasePath();
     $path = $request->getUri()->getPath();
     $method = $request->getMethod();
+    $env = AppConfig::getEnvironment();
+
+    // ベースパスを除去してルーティング用のパスを決定する
+    $matchPath = $path;
+    if ($basePath !== '' && strpos($path, $basePath) === 0) {
+        $matchPath = substr($path, strlen($basePath));
+    }
+    // 空文字の場合は / に統一
+    if ($matchPath === '') {
+        $matchPath = '/';
+    }
+    // URLデコードする
+    $matchPath = urldecode($matchPath);
+
+    error_log("Request: $method $path (matchPath: $matchPath, basePath: $basePath, env: $env)");
 
     try {
-        if (($path === $basePath . '/' || $path === $basePath) && $method === 'GET') {
+        if ($matchPath === '/' && $method === 'GET') {
             $feeds = $repository->getRssFeeds();
             return new Response(200, [], $blade->run('index', ['feeds' => $feeds, 'basePath' => $basePath]));
         }
 
-        if ($path === $basePath . '/new' && $method === 'GET') {
+        if ($matchPath === '/new' && $method === 'GET') {
             return new Response(200, [], $blade->run('edit', ['feed' => null, 'basePath' => $basePath]));
         }
 
-        if ($path === $basePath . '/new' && $method === 'POST') {
+        if ($matchPath === '/new' && $method === 'POST') {
             $params = $request->getParsedBody();
             if (empty($params['name']) || empty($params['url']) || empty($params['notify_method'])) {
                 return new Response(400, [], 'Missing required parameters');
@@ -71,16 +86,17 @@ function main_http(ServerRequestInterface $request): ResponseInterface
             return new Response(302, ['Location' => $basePath . '/']);
         }
 
-        if (preg_match('#^' . preg_quote($basePath, '#') . '/edit/([^/]+)$#', $path, $matches) && $method === 'GET') {
+        if (preg_match('#^/edit/([^/]+)$#', $matchPath, $matches) && $method === 'GET') {
             $id = $matches[1];
             $feed = $repository->getFeed($id);
             if (!$feed) {
+                error_log("Feed not found: $id");
                 return new Response(404, [], 'Feed not found');
             }
             return new Response(200, [], $blade->run('edit', ['feed' => $feed, 'basePath' => $basePath]));
         }
 
-        if (preg_match('#^' . preg_quote($basePath, '#') . '/edit/([^/]+)$#', $path, $matches) && $method === 'POST') {
+        if (preg_match('#^/edit/([^/]+)$#', $matchPath, $matches) && $method === 'POST') {
             $id = $matches[1];
             $params = $request->getParsedBody();
             if (empty($params['name']) || empty($params['url']) || empty($params['notify_method'])) {
@@ -96,12 +112,13 @@ function main_http(ServerRequestInterface $request): ResponseInterface
             return new Response(302, ['Location' => $basePath . '/']);
         }
 
-        if (preg_match('#^' . preg_quote($basePath, '#') . '/delete/([^/]+)$#', $path, $matches) && $method === 'POST') {
+        if (preg_match('#^/delete/([^/]+)$#', $matchPath, $matches) && $method === 'POST') {
             $id = $matches[1];
             $repository->deleteFeed($id);
             return new Response(302, ['Location' => $basePath . '/']);
         }
 
+        error_log("Route not found: $method $path (matchPath: $matchPath)");
         return new Response(404, [], 'Not Found');
     } catch (\Exception $e) {
         $errorMessage = AppConfig::getEnvironment() === 'production' ? 'Internal Server Error' : 'Error: ' . $e->getMessage();
