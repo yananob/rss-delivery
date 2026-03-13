@@ -56,6 +56,8 @@ function main_http(ServerRequestInterface $request): ResponseInterface
     if ($matchPath === '') {
         $matchPath = '/';
     }
+    // URLデコードする
+    $matchPath = urldecode($matchPath);
 
     error_log("Request: $method $path (matchPath: $matchPath, basePath: $basePath, env: $env)");
 
@@ -88,6 +90,7 @@ function main_http(ServerRequestInterface $request): ResponseInterface
             $id = $matches[1];
             $feed = $repository->getFeed($id);
             if (!$feed) {
+                error_log("Feed not found: $id");
                 return new Response(404, [], 'Feed not found');
             }
             return new Response(200, [], $blade->run('edit', ['feed' => $feed, 'basePath' => $basePath]));
