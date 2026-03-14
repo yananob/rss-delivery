@@ -20,7 +20,7 @@ class AppConfig
      */
     public static function getEnvironment(): string
     {
-        return getenv('APP_ENV') ?: 'local';
+        return getenv('APP_ENV');
     }
 
     /**
@@ -48,6 +48,20 @@ class AppConfig
             // 'production' => '',
             'test' => 'nobu',
             default => 'nobu',
+        };
+    }
+
+    /**
+     * アプリケーションのベースパスを取得します。
+     *
+     * @return string ベースパス。
+     */
+    public static function getBasePath(): string
+    {
+        return match (self::getEnvironment()) {
+            'production' => '/rss-delivery',
+            'test' => '/rss-delivery-test',
+            default => '',
         };
     }
 }

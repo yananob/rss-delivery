@@ -3,7 +3,7 @@
 @section('content')
 <h1>{{ isset($feed) ? 'フィード編集' : 'フィード新規作成' }}</h1>
 
-<form action="{{ isset($feed) ? '/edit/' . $feed->getId() : '/new' }}" method="POST" class="mt-4">
+<form action="{{ isset($feed) ? $basePath . '/edit/' . $feed->getId() : $basePath . '/new' }}" method="POST" class="mt-4">
     <div class="mb-3">
         <label for="name" class="form-label">フィード名</label>
         <input type="text" class="form-control" id="name" name="name" value="{{ $feed ? $feed->getName() : '' }}" required>
@@ -26,7 +26,7 @@
 
     <div class="mt-4">
         <button type="submit" class="btn btn-primary">{{ isset($feed) ? '更新' : '保存' }}</button>
-        <a href="/" class="btn btn-outline-secondary">キャンセル</a>
+        <a href="{{ $basePath }}/" class="btn btn-outline-secondary">キャンセル</a>
     </div>
 </form>
 @endsection
