@@ -36,3 +36,7 @@ jobs:
       event_timeout: '5m'
       environment_variables: |-
         APP_ENV=production
+    secrets:
+      GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+      GCP_REGION: ${{ secrets.GCP_REGION }}
+      GCP_PROJECT_NUMBER: ${{ secrets.GCP_PROJECT_NUMBER }}
