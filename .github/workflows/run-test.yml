@@ -1,13 +1,17 @@
 name: Run test
 
 on:
-  # pull_request:
-  #   types: [opened, reopened, synchronize]
   push:
     branches:
-      # - main
       - test
-
+  pull_request:
+    branches: 
+      - test
+    types:
+      - 'opened'
+      - 'synchronize'
+      - 'edited'
+      - 'reopened'
   schedule:
     - cron:  '45 21 * * 5'
   workflow_dispatch:
