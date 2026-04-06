@@ -19,7 +19,7 @@ class LineNotifier
      * コンストラクタ
      * @param Client|null $httpClient Guzzle HTTP Client
      */
-    public function __construct(Client $httpClient = null)
+    public function __construct(?Client $httpClient = null)
     {
         $this->httpClient = $httpClient ?: new Client();
     }

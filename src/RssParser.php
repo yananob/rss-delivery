@@ -23,7 +23,7 @@ class RssParser
      * @param Reader|null $reader laminas-feedのReaderインスタンス
      * @param Client|null $httpClient Guzzle HTTPクライアントインスタンス
      */
-    public function __construct(Reader $reader = null, Client $httpClient = null)
+    public function __construct(?Reader $reader = null, ?Client $httpClient = null)
     {
         $this->reader = $reader ?: new Reader();
         $this->httpClient = $httpClient ?: new Client();

@@ -20,7 +20,6 @@ class AppConfigTest extends TestCase
 
         $botIds = AppConfig::getLineBotIds();
 
-        $this->assertIsArray($botIds);
         $this->assertCount(2, $botIds);
         $this->assertContains('bot1', $botIds);
         $this->assertContains('bot2', $botIds);
@@ -36,7 +35,6 @@ class AppConfigTest extends TestCase
 
         $botIds = AppConfig::getLineBotIds();
 
-        $this->assertIsArray($botIds);
         $this->assertEmpty($botIds);
 
         putenv("LINE_TOKENS_N_TARGETS=$original"); // restore
