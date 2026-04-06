@@ -64,4 +64,27 @@ class AppConfig
             default => '',
         };
     }
+
+    /**
+     * LINEメッセージ配信のボットID一覧を取得します。
+     *
+     * @return array<string> ボットIDの配列。
+     */
+    public static function getLineBotIds(): array
+    {
+        $lineConfigJson = getenv('LINE_TOKENS_N_TARGETS');
+        if (!$lineConfigJson) {
+            return [];
+        }
+
+        $lineConfig = json_decode($lineConfigJson, true);
+        if (!isset($lineConfig['target_ids'])) {
+            return [];
+        }
+
+        $ids = array_keys($lineConfig['target_ids']);
+        return array_values(array_filter($ids, function ($id) {
+            return !str_starts_with($id, '__');
+        }));
+    }
 }

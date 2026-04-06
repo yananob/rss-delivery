@@ -68,7 +68,12 @@ function main_http(ServerRequestInterface $request): ResponseInterface
         }
 
         if ($matchPath === '/new' && $method === 'GET') {
-            return new Response(200, [], $blade->run('edit', ['feed' => null, 'basePath' => $basePath]));
+            $lineBotIds = AppConfig::getLineBotIds();
+            return new Response(200, [], $blade->run('edit', [
+                'feed' => null,
+                'basePath' => $basePath,
+                'lineBotIds' => $lineBotIds
+            ]));
         }
 
         if ($matchPath === '/new' && $method === 'POST') {
@@ -93,7 +98,12 @@ function main_http(ServerRequestInterface $request): ResponseInterface
                 error_log("Feed not found: $id");
                 return new Response(404, [], 'Feed not found');
             }
-            return new Response(200, [], $blade->run('edit', ['feed' => $feed, 'basePath' => $basePath]));
+            $lineBotIds = AppConfig::getLineBotIds();
+            return new Response(200, [], $blade->run('edit', [
+                'feed' => $feed,
+                'basePath' => $basePath,
+                'lineBotIds' => $lineBotIds
+            ]));
         }
 
         if (preg_match('#^/edit/([^/]+)$#', $matchPath, $matches) && $method === 'POST') {
