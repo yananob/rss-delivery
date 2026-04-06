@@ -82,6 +82,9 @@ class AppConfig
             return [];
         }
 
-        return array_keys($lineConfig['target_ids']);
+        $ids = array_keys($lineConfig['target_ids']);
+        return array_values(array_filter($ids, function ($id) {
+            return !str_starts_with($id, '__');
+        }));
     }
 }

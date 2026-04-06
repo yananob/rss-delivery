@@ -11,14 +11,22 @@ class AppConfigTest extends TestCase
 {
     public function test_getLineBotIds_returns_correct_ids(): void
     {
-        // phpunit.xml で設定されている環境変数を使用
-        // LINE_TOKENS_N_TARGETS = '{"tokens":{"test_bot":"dummy_token"},"target_ids":{"test_bot":"dummy_target"}}'
+        $original = getenv('LINE_TOKENS_N_TARGETS');
+        $testConfig = json_encode([
+            'tokens' => ['bot1' => 't1', 'bot2' => 't2', '__hidden' => 't3'],
+            'target_ids' => ['bot1' => 'id1', 'bot2' => 'id2', '__hidden' => 'id3']
+        ]);
+        putenv("LINE_TOKENS_N_TARGETS=$testConfig");
 
         $botIds = AppConfig::getLineBotIds();
 
         $this->assertIsArray($botIds);
-        $this->assertCount(1, $botIds);
-        $this->assertEquals(['test_bot'], $botIds);
+        $this->assertCount(2, $botIds);
+        $this->assertContains('bot1', $botIds);
+        $this->assertContains('bot2', $botIds);
+        $this->assertNotContains('__hidden', $botIds);
+
+        putenv("LINE_TOKENS_N_TARGETS=$original");
     }
 
     public function test_getLineBotIds_returns_empty_array_when_env_not_set(): void
