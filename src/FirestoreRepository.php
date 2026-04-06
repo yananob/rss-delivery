@@ -24,7 +24,7 @@ class FirestoreRepository
      * コンストラクタ
      * @param FirestoreClient|null $firestore Firestoreクライアント
      */
-    public function __construct(FirestoreClient $firestore = null)
+    public function __construct(?FirestoreClient $firestore = null)
     {
         if ($firestore) {
             self::$client = $firestore;

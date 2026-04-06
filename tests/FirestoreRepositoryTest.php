@@ -10,7 +10,9 @@ use Google\Cloud\Firestore\CollectionReference;
 use Google\Cloud\Firestore\FirestoreClient;
 use PHPUnit\Framework\TestCase;
 use Carbon\Carbon;
+use PHPUnit\Framework\Attributes\Group;
 
+#[Group('integration')]
 class FirestoreRepositoryTest extends TestCase
 {
     private FirestoreRepository $repository;
