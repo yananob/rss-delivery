@@ -21,7 +21,14 @@
     </div>
     <div class="mb-3">
         <label for="notify_bot" class="form-label">通知BOT ID (LINEの場合のみ)</label>
-        <input type="text" class="form-control" id="notify_bot" name="notify_bot" value="{{ $feed ? $feed->getNotifyBot() : '' }}">
+        <select class="form-select" id="notify_bot" name="notify_bot">
+            <option value="">(選択してください)</option>
+            @foreach ($lineBotIds as $botId)
+                <option value="{{ $botId }}" {{ ($feed && $feed->getNotifyBot() == $botId) ? 'selected' : '' }}>
+                    {{ $botId }}
+                </option>
+            @endforeach
+        </select>
     </div>
 
     <div class="mt-4">
