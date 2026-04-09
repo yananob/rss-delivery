@@ -63,8 +63,17 @@ function main_http(ServerRequestInterface $request): ResponseInterface
 
     try {
         if ($matchPath === '/' && $method === 'GET') {
-            $feeds = $repository->getRssFeeds();
-            return new Response(200, [], $blade->run('index', ['feeds' => $feeds, 'basePath' => $basePath]));
+            $queryParams = $request->getQueryParams();
+            $sort = $queryParams['sort'] ?? 'name';
+            $direction = $queryParams['direction'] ?? 'asc';
+
+            $feeds = $repository->getRssFeeds($sort, $direction);
+            return new Response(200, [], $blade->run('index', [
+                'feeds' => $feeds,
+                'basePath' => $basePath,
+                'currentSort' => $sort,
+                'currentDirection' => $direction,
+            ]));
         }
 
         if ($matchPath === '/new' && $method === 'GET') {

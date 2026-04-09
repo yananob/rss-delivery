@@ -9,10 +9,38 @@
 <table class="table table-striped">
     <thead>
         <tr>
-            <th>名前</th>
-            <th>URL</th>
-            <th>通知方法</th>
-            <th>通知BOT</th>
+            <th>
+                <a href="{{ $basePath }}/?sort=name&direction={{ $currentSort === 'name' && $currentDirection === 'asc' ? 'desc' : 'asc' }}">
+                    名前
+                    @if($currentSort === 'name')
+                        {{ $currentDirection === 'asc' ? '▲' : '▼' }}
+                    @endif
+                </a>
+            </th>
+            <th>
+                <a href="{{ $basePath }}/?sort=url&direction={{ $currentSort === 'url' && $currentDirection === 'asc' ? 'desc' : 'asc' }}">
+                    URL
+                    @if($currentSort === 'url')
+                        {{ $currentDirection === 'asc' ? '▲' : '▼' }}
+                    @endif
+                </a>
+            </th>
+            <th>
+                <a href="{{ $basePath }}/?sort=notify_method&direction={{ $currentSort === 'notify_method' && $currentDirection === 'asc' ? 'desc' : 'asc' }}">
+                    通知方法
+                    @if($currentSort === 'notify_method')
+                        {{ $currentDirection === 'asc' ? '▲' : '▼' }}
+                    @endif
+                </a>
+            </th>
+            <th>
+                <a href="{{ $basePath }}/?sort=notify_bot&direction={{ $currentSort === 'notify_bot' && $currentDirection === 'asc' ? 'desc' : 'asc' }}">
+                    通知BOT
+                    @if($currentSort === 'notify_bot')
+                        {{ $currentDirection === 'asc' ? '▲' : '▼' }}
+                    @endif
+                </a>
+            </th>
             <th>操作</th>
         </tr>
     </thead>
