@@ -55,15 +55,23 @@ class FirestoreRepository
     /**
      * RSSフィードの設定を取得する
      *
+     * @param string $sortBy 並び替えの基準となるフィールド名
+     * @param string $direction 並び替えの方向 (asc または desc)
      * @return array<int, Feed> 設定情報の配列
      */
-    public function getRssFeeds(): array
+    public function getRssFeeds(string $sortBy = 'name', string $direction = 'asc'): array
     {
         $feeds = [];
-        $documents = $this->collectionRoot
+        $query = $this->collectionRoot
             ->document(self::COLLECTION_FEEDS)
-            ->collection(self::COLLECTION_FEEDS)
-            ->documents();
+            ->collection(self::COLLECTION_FEEDS);
+
+        // 有効なフィールド名のみを許可する
+        $allowedFields = ['name', 'url', 'notify_method', 'notify_bot'];
+        $orderField = in_array($sortBy, $allowedFields) ? $sortBy : 'name';
+        $orderDirection = (strtolower($direction) === 'desc') ? 'descending' : 'ascending';
+
+        $documents = $query->orderBy($orderField, $orderDirection)->documents();
 
         foreach ($documents as $document) {
             if ($document->exists()) {
