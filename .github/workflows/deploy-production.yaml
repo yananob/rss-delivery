@@ -14,7 +14,6 @@ permissions:
 
 jobs:
   prepare:
-    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     outputs:
       function_name: ${{ steps.set_name.outputs.function_name }}
