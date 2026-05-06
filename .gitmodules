@@ -3,4 +3,4 @@
 	url = git@github.com:yananob/cloud-functions-common
 [submodule "_template"]
 	path = _template
-	url = git@github.com:yananob/_template
+	url = git@github.com:yananob/_template-cloudfunctions
