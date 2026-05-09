@@ -14,6 +14,11 @@
             "command": "./tests/run_tests.sh"
         },
         {
+            "label": "listen_local_http",
+            "type": "shell",
+            "command": "./tests/listen_local_http.sh"
+        },
+        {
             "label": "listen_local_event",
             "type": "shell",
             "command": "./tests/listen_local_event.sh"

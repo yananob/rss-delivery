@@ -3,7 +3,7 @@
 @section('content')
 <h1>{{ isset($feed) ? 'フィード編集' : 'フィード新規作成' }}</h1>
 
-<form action="{{ isset($feed) ? $basePath . '/edit/' . $feed->getId() : $basePath . '/new' }}" method="POST" class="mt-4">
+<form action="{{ isset($feed) ? '/edit/' . $feed->getId() : '/new' }}" method="POST" class="mt-4">
     <div class="mb-3">
         <label for="name" class="form-label">フィード名</label>
         <input type="text" class="form-control" id="name" name="name" value="{{ $feed ? $feed->getName() : '' }}" required>
@@ -11,6 +11,10 @@
     <div class="mb-3">
         <label for="url" class="form-label">URL</label>
         <input type="url" class="form-control" id="url" name="url" value="{{ $feed ? $feed->getUrl() : '' }}" required>
+    </div>
+    <div class="mb-3 form-check">
+        <input type="checkbox" class="form-check-input" id="enabled" name="enabled" {{ (!$feed || $feed->isEnabled()) ? 'checked' : '' }}>
+        <label class="form-check-label" for="enabled">有効</label>
     </div>
     <div class="mb-3">
         <label for="notify_method" class="form-label">通知方法</label>
@@ -33,7 +37,7 @@
 
     <div class="mt-4">
         <button type="submit" class="btn btn-primary">{{ isset($feed) ? '更新' : '保存' }}</button>
-        <a href="{{ $basePath }}/" class="btn btn-outline-secondary">キャンセル</a>
+        <a href="/" class="btn btn-outline-secondary">キャンセル</a>
     </div>
 </form>
 @endsection

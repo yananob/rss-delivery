@@ -73,15 +73,30 @@ class FirestoreRepository
 
         $documents = $query->orderBy($orderField, $orderDirection)->documents();
 
+        // 更新情報を取得
+        $updates = [];
+        $updateDocs = $this->collectionRoot
+            ->document(self::COLLECTION_UPDATES)
+            ->collection(self::COLLECTION_UPDATES)
+            ->documents();
+        foreach ($updateDocs as $doc) {
+            if ($doc->exists()) {
+                $updates[$doc->id()] = $doc->get('updated_at');
+            }
+        }
+
         foreach ($documents as $document) {
             if ($document->exists()) {
                 $feedData = $document->data();
+                $feedId = $document->id();
                 $feeds[] = new Feed(
-                    $document->id(),
+                    $feedId,
                     $feedData['name'],
                     $feedData['url'],
                     $feedData['notify_method'],
-                    $feedData['notify_bot'] ?? null
+                    $feedData['notify_bot'] ?? null,
+                    $feedData['enabled'] ?? true,
+                    $updates[$feedId] ?? null
                 );
             }
         }
@@ -109,7 +124,8 @@ class FirestoreRepository
                 $feedData['name'],
                 $feedData['url'],
                 $feedData['notify_method'],
-                $feedData['notify_bot'] ?? null
+                $feedData['notify_bot'] ?? null,
+                $feedData['enabled'] ?? true
             );
         }
 

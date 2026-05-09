@@ -1,20 +1,12 @@
-name: Deploy Cloud Functions (test)
+name: Deploy Cloud Functions (production)
 on:
   push:
     branches:
-      - test
-  pull_request:
-    branches: 
-      - test
-    types:
-      - 'opened'
-      - 'synchronize'
-      - 'edited'
-      - 'reopened'
+      - main
   workflow_dispatch:
 
 concurrency:
-  group: rss-delivery-deploy-test
+  group: rss-delivery-deploy-prod
 
 permissions:
   contents: 'read'
@@ -30,9 +22,9 @@ jobs:
         id: set_name
         run: |
           # if [ -n "${{ github.event.pull_request.number }}" ]; then
-          #   echo "function_name=rss-delivery-test${{ github.event.pull_request.number }}" >> $GITHUB_OUTPUT
+          #   echo "function_name=rss-delivery${{ github.event.pull_request.number }}" >> $GITHUB_OUTPUT
           # else
-            echo "function_name=rss-delivery-test" >> $GITHUB_OUTPUT
+            echo "function_name=rss-delivery" >> $GITHUB_OUTPUT
           # fi
 
   deploy:
@@ -55,7 +47,7 @@ jobs:
       http_timeout: '5m'
       event_timeout: '540s'
       environment_variables: |-
-        APP_ENV=test
+        APP_ENV=production
     secrets:
       GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
       GCP_REGION: ${{ secrets.GCP_REGION }}
@@ -77,4 +69,4 @@ jobs:
           submodules: 'true'
       - name: Add comment to PR
         run: |
-          gh pr comment $PR_NUMBER --body "Deployment succeeded to https://${{ needs.prepare.outputs.function_name }}-${{ secrets.GCP_PROJECT_NUMBER }}.${{ secrets.GCP_REGION }}.run.app \n [skip ci]"
+          gh pr comment $PR_NUMBER --body "Deployed to url https://${{ secrets.GCP_REGION }}-${{ secrets.GCP_PROJECT_ID }}.cloudfunctions.net/${{ needs.prepare.outputs.function_name }}"

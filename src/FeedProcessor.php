@@ -29,6 +29,10 @@ class FeedProcessor
         }
 
         foreach ($feeds as $feed) {
+            if (!$feed->isEnabled()) {
+                $this->log->info('Skipping disabled feed: ' . $feed->getName() . ' (ID: ' . $feed->getId() . ')');
+                continue;
+            }
             $this->log->debug('Processing single feed: ' . $feed->getName() . ' (ID: ' . $feed->getId() . ')');
             $this->processSingleFeed($feed);
             $this->log->debug('Finished processing feed: ' . $feed->getName());
