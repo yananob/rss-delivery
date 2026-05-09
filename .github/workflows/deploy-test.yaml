@@ -77,4 +77,4 @@ jobs:
           submodules: 'true'
       - name: Add comment to PR
         run: |
-          gh pr comment $PR_NUMBER --body "Deployed to url https://${{ secrets.GCP_REGION }}-${{ secrets.GCP_PROJECT_ID }}.cloudfunctions.net/${{ needs.prepare.outputs.function_name }}"
+          gh pr comment $PR_NUMBER --body "Deployment succeeded to https://${{ needs.prepare.outputs.function_name }}-${{ secrets.GCP_PROJECT_NUMBER }}.${{ secrets.GCP_REGION }}.run.app \n [skip ci]"
