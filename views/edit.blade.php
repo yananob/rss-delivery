@@ -12,6 +12,10 @@
         <label for="url" class="form-label">URL</label>
         <input type="url" class="form-control" id="url" name="url" value="{{ $feed ? $feed->getUrl() : '' }}" required>
     </div>
+    <div class="mb-3 form-check">
+        <input type="checkbox" class="form-check-input" id="enabled" name="enabled" {{ (!$feed || $feed->isEnabled()) ? 'checked' : '' }}>
+        <label class="form-check-label" for="enabled">有効</label>
+    </div>
     <div class="mb-3">
         <label for="notify_method" class="form-label">通知方法</label>
         <select class="form-select" id="notify_method" name="notify_method" required>

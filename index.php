@@ -96,6 +96,7 @@ function main_http(ServerRequestInterface $request): ResponseInterface
                 'url' => $params['url'],
                 'notify_method' => $params['notify_method'],
                 'notify_bot' => $params['notify_bot'] ?? null,
+                'enabled' => isset($params['enabled']),
             ]);
             return new Response(302, ['Location' => $basePath . '/']);
         }
@@ -127,6 +128,7 @@ function main_http(ServerRequestInterface $request): ResponseInterface
                 'url' => $params['url'],
                 'notify_method' => $params['notify_method'],
                 'notify_bot' => $params['notify_bot'] ?? null,
+                'enabled' => isset($params['enabled']),
             ]);
             return new Response(302, ['Location' => $basePath . '/']);
         }

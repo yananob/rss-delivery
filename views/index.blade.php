@@ -17,6 +17,7 @@
                     @endif
                 </a>
             </th>
+            <th>状態</th>
             <th>
                 <a href="{{ $basePath }}/?sort=url&direction={{ $currentSort === 'url' && $currentDirection === 'asc' ? 'desc' : 'asc' }}">
                     URL
@@ -41,6 +42,7 @@
                     @endif
                 </a>
             </th>
+            <th>最終取得日時</th>
             <th>操作</th>
         </tr>
     </thead>
@@ -48,9 +50,17 @@
         @foreach($feeds as $feed)
         <tr>
             <td>{{ $feed->getName() }}</td>
+            <td>
+                @if($feed->isEnabled())
+                    <span class="badge bg-success">有効</span>
+                @else
+                    <span class="badge bg-secondary">無効</span>
+                @endif
+            </td>
             <td><a href="{{ $feed->getUrl() }}" target="_blank">{{ $feed->getUrl() }}</a></td>
             <td>{{ $feed->getNotifyMethod() }}</td>
             <td>{{ $feed->getNotifyBot() ?? '-' }}</td>
+            <td>{{ $feed->getLastUpdatedAt() ?? '-' }}</td>
             <td>
                 <a href="{{ $basePath }}/edit/{{ $feed->getId() }}" class="btn btn-sm btn-outline-secondary">編集</a>
                 <form action="{{ $basePath }}/delete/{{ $feed->getId() }}" method="POST" class="d-inline" onsubmit="return confirm('本当に削除しますか？');">
