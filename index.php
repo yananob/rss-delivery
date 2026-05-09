@@ -42,16 +42,12 @@ function main_http(ServerRequestInterface $request): ResponseInterface
     $blade = new BladeOne($views, $cache, $mode);
     $repository = new FirestoreRepository();
 
-    $basePath = AppConfig::getBasePath();
     $path = $request->getUri()->getPath();
     $method = $request->getMethod();
     $env = AppConfig::getEnvironment();
 
-    // ベースパスを除去してルーティング用のパスを決定する
+    // ルーティング用のパスを決定する
     $matchPath = $path;
-    if ($basePath !== '' && strpos($path, $basePath) === 0) {
-        $matchPath = substr($path, strlen($basePath));
-    }
     // 空文字の場合は / に統一
     if ($matchPath === '') {
         $matchPath = '/';
@@ -59,7 +55,7 @@ function main_http(ServerRequestInterface $request): ResponseInterface
     // URLデコードする
     $matchPath = urldecode($matchPath);
 
-    error_log("Request: $method $path (matchPath: $matchPath, basePath: $basePath, env: $env)");
+    error_log("Request: $method $path (matchPath: $matchPath, env: $env)");
 
     try {
         if ($matchPath === '/' && $method === 'GET') {
@@ -70,7 +66,6 @@ function main_http(ServerRequestInterface $request): ResponseInterface
             $feeds = $repository->getRssFeeds($sort, $direction);
             return new Response(200, [], $blade->run('index', [
                 'feeds' => $feeds,
-                'basePath' => $basePath,
                 'currentSort' => $sort,
                 'currentDirection' => $direction,
             ]));
@@ -80,7 +75,6 @@ function main_http(ServerRequestInterface $request): ResponseInterface
             $lineBotIds = AppConfig::getLineBotIds();
             return new Response(200, [], $blade->run('edit', [
                 'feed' => null,
-                'basePath' => $basePath,
                 'lineBotIds' => $lineBotIds
             ]));
         }
@@ -96,8 +90,9 @@ function main_http(ServerRequestInterface $request): ResponseInterface
                 'url' => $params['url'],
                 'notify_method' => $params['notify_method'],
                 'notify_bot' => $params['notify_bot'] ?? null,
+                'enabled' => isset($params['enabled']),
             ]);
-            return new Response(302, ['Location' => $basePath . '/']);
+            return new Response(302, ['Location' => '/']);
         }
 
         if (preg_match('#^/edit/([^/]+)$#', $matchPath, $matches) && $method === 'GET') {
@@ -110,7 +105,6 @@ function main_http(ServerRequestInterface $request): ResponseInterface
             $lineBotIds = AppConfig::getLineBotIds();
             return new Response(200, [], $blade->run('edit', [
                 'feed' => $feed,
-                'basePath' => $basePath,
                 'lineBotIds' => $lineBotIds
             ]));
         }
@@ -127,14 +121,15 @@ function main_http(ServerRequestInterface $request): ResponseInterface
                 'url' => $params['url'],
                 'notify_method' => $params['notify_method'],
                 'notify_bot' => $params['notify_bot'] ?? null,
+                'enabled' => isset($params['enabled']),
             ]);
-            return new Response(302, ['Location' => $basePath . '/']);
+            return new Response(302, ['Location' => '/']);
         }
 
         if (preg_match('#^/delete/([^/]+)$#', $matchPath, $matches) && $method === 'POST') {
             $id = $matches[1];
             $repository->deleteFeed($id);
-            return new Response(302, ['Location' => $basePath . '/']);
+            return new Response(302, ['Location' => '/']);
         }
 
         error_log("Route not found: $method $path (matchPath: $matchPath)");

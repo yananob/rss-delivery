@@ -52,20 +52,6 @@ class AppConfig
     }
 
     /**
-     * アプリケーションのベースパスを取得します。
-     *
-     * @return string ベースパス。
-     */
-    public static function getBasePath(): string
-    {
-        return match (self::getEnvironment()) {
-            'production' => '/rss-delivery',
-            'test' => '/rss-delivery-test',
-            default => '',
-        };
-    }
-
-    /**
      * LINEメッセージ配信のボットID一覧を取得します。
      *
      * @return array<string> ボットIDの配列。
