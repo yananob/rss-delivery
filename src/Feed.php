@@ -11,7 +11,9 @@ class Feed
         private string $name,
         private string $url,
         private string $notify_method,
-        private ?string $notify_bot
+        private ?string $notify_bot,
+        private bool $enabled = true,
+        private ?string $lastUpdatedAt = null
     ) {
     }
 
@@ -38,5 +40,15 @@ class Feed
     public function getNotifyBot(): ?string
     {
         return $this->notify_bot;
+    }
+
+    public function isEnabled(): bool
+    {
+        return $this->enabled;
+    }
+
+    public function getLastUpdatedAt(): ?string
+    {
+        return $this->lastUpdatedAt;
     }
 }

@@ -7,5 +7,6 @@ parameters:
         - node_modules (?)
         - templates_c (?)
         - _deploy (?)
+        - _template
 
     treatPhpDocTypesAsCertain: false

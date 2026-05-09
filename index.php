@@ -49,7 +49,7 @@ function main_http(ServerRequestInterface $request): ResponseInterface
 
     // ベースパスを除去してルーティング用のパスを決定する
     $matchPath = $path;
-    if ($basePath !== '' && strpos($path, $basePath) === 0) {
+    if ($basePath !== '' && str_starts_with($path, $basePath)) {
         $matchPath = substr($path, strlen($basePath));
     }
     // 空文字の場合は / に統一
@@ -87,15 +87,16 @@ function main_http(ServerRequestInterface $request): ResponseInterface
 
         if ($matchPath === '/new' && $method === 'POST') {
             $params = $request->getParsedBody();
-            if (empty($params['name']) || empty($params['url']) || empty($params['notify_method'])) {
+            if (!is_array($params) || empty($params['name']) || empty($params['url']) || empty($params['notify_method'])) {
                 return new Response(400, [], 'Missing required parameters');
             }
 
             $repository->addFeed([
-                'name' => $params['name'],
-                'url' => $params['url'],
-                'notify_method' => $params['notify_method'],
-                'notify_bot' => $params['notify_bot'] ?? null,
+                'name' => (string)$params['name'],
+                'url' => (string)$params['url'],
+                'notify_method' => (string)$params['notify_method'],
+                'notify_bot' => isset($params['notify_bot']) ? (string)$params['notify_bot'] : null,
+                'enabled' => isset($params['enabled']),
             ]);
             return new Response(302, ['Location' => $basePath . '/']);
         }
@@ -118,15 +119,16 @@ function main_http(ServerRequestInterface $request): ResponseInterface
         if (preg_match('#^/edit/([^/]+)$#', $matchPath, $matches) && $method === 'POST') {
             $id = $matches[1];
             $params = $request->getParsedBody();
-            if (empty($params['name']) || empty($params['url']) || empty($params['notify_method'])) {
+            if (!is_array($params) || empty($params['name']) || empty($params['url']) || empty($params['notify_method'])) {
                 return new Response(400, [], 'Missing required parameters');
             }
 
             $repository->updateFeed($id, [
-                'name' => $params['name'],
-                'url' => $params['url'],
-                'notify_method' => $params['notify_method'],
-                'notify_bot' => $params['notify_bot'] ?? null,
+                'name' => (string)$params['name'],
+                'url' => (string)$params['url'],
+                'notify_method' => (string)$params['notify_method'],
+                'notify_bot' => isset($params['notify_bot']) ? (string)$params['notify_bot'] : null,
+                'enabled' => isset($params['enabled']),
             ]);
             return new Response(302, ['Location' => $basePath . '/']);
         }

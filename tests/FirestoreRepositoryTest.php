@@ -76,6 +76,9 @@ class FirestoreRepositoryTest extends TestCase
 
     public function test_RSSフィード設定を正しく取得できる(): void
     {
+        $timestamp = Carbon::now('Asia/Tokyo')->getTimestamp();
+        $this->repository->saveLastUpdatedAt($this->testFeedId1, $timestamp);
+
         $feeds = $this->repository->getRssFeeds();
 
         $testFeed1 = null;
@@ -89,6 +92,8 @@ class FirestoreRepositoryTest extends TestCase
         $this->assertNotNull($testFeed1, "Test feed 1 should be found.");
         $this->assertEquals('Integration Test Feed 1', $testFeed1->getName());
         $this->assertEquals('LINE', $testFeed1->getNotifyMethod());
+        $this->assertTrue($testFeed1->isEnabled());
+        $this->assertNotNull($testFeed1->getLastUpdatedAt());
     }
 
     public function test_最終更新日時をCarbonを使い文字列で保存しタイムスタンプで取得できる(): void
