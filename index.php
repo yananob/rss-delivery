@@ -49,7 +49,7 @@ function main_http(ServerRequestInterface $request): ResponseInterface
     // ルーティング用のパスを決定する
     $matchPath = $path;
     // 空文字の場合は / に統一
-    if ($matchPath === '' || $matchPath === null) {
+    if ($matchPath === '') {
         $matchPath = '/';
     }
     // URLデコードする
