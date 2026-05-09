@@ -1,0 +1,34 @@
+name: Auto Create PR from test to main
+on:
+  push:
+    branches:
+      - test
+
+jobs:
+  create-pr:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Create PR if not exists
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # 1. すでに test -> main の PR が開いているか確認
+          PR_EXISTS=$(gh pr list --base main --head test --state open --json number --jq '.[0].number')
+
+          if [ -z "$PR_EXISTS" ]; then
+            echo "PRが見つからへんから、新しく作るで！"
+            gh pr create \
+              --base main \
+              --head test \
+              --title "Release test to main [Auto-PR]" \
+              --body "testブランチをmainに反映します。自動生成されたPRです。"
+          else
+            echo "PR #${PR_EXISTS} がすでにあるから、作成はスキップするな。"
+          fi
