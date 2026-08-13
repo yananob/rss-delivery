@@ -9,7 +9,12 @@ permissions:
   contents: write
 
 jobs:
-  update:
+  update-submodules:
     uses: yananob/myapps-common/.github/workflows/update-submodules.yml@main
+    secrets:
+      GH_PAT: ${{ secrets.GH_PAT }}
+
+  update-packages:
+    uses: yananob/myapps-common/.github/workflows/update-packages.yml@main
     secrets:
       GH_PAT: ${{ secrets.GH_PAT }}
