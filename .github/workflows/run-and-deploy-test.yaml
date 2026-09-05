@@ -1,0 +1,138 @@
+name: Run test & Deploy Cloud Functions (test)
+on:
+  push:
+    branches:
+      - test
+  pull_request:
+    branches:
+      - test
+    types:
+      - 'opened'
+      - 'synchronize'
+      - 'edited'
+      - 'reopened'
+  workflow_dispatch:
+
+concurrency:
+  group: rss-delivery-deploy-test
+  cancel-in-progress: true
+
+permissions:
+  contents: 'read'
+  id-token: 'write'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      GRPC_VERBOSITY: ERROR  # GRPCのログ出力を抑止
+
+    steps:
+    - uses: actions/checkout@v5
+      with:
+        submodules: 'true'
+
+    - name: Set up PHP 8.2
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: "8.2"
+        extensions: grpc
+
+    - name: Validate composer.json and composer.lock
+      run: composer validate
+
+    - name: Get current directory
+      id: current_dir
+      run: echo "CURRENT_DIR=$(pwd)" >> $GITHUB_OUTPUT
+
+    - name: Cache Composer packages
+      id: composer-cache
+      uses: actions/cache@v5
+      with:
+        path: ${{ steps.current_dir.outputs.CURRENT_DIR }}/vendor
+        key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-php-
+
+    # - name: Cache NPM packages
+    #   id: npm-cache
+    #   uses: actions/cache@v5
+    #   with:
+    #     path: ${{ steps.current_dir.outputs.CURRENT_DIR }}/node_modules
+    #     key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
+    #     restore-keys: |
+    #       ${{ runner.os }}-npm-
+
+    - name: Install dependencies (Composer)
+      run: composer install --prefer-dist --no-progress
+
+    # - name: Install dependencies (NPM)
+    #   run: npm install --prefer-offline --no-audit --progress=false
+
+    - name: Google Cloud認証
+      id: 'auth'
+      uses: 'google-github-actions/auth@v3'
+      with:
+        workload_identity_provider: 'projects/${{ secrets.GCP_PROJECT_NUMBER }}/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider'
+        service_account: 'cloud-run-functions-deployer@${{ secrets.GCP_PROJECT_ID }}.iam.gserviceaccount.com'
+
+    - name: Test with phpunit
+      run: bash tests/run_tests.sh
+
+  prepare-deploy:
+    runs-on: ubuntu-latest
+    outputs:
+      function_name: ${{ steps.set_name.outputs.function_name }}
+    steps:
+      - name: Set function name
+        id: set_name
+        run: |
+          # if [ -n "${{ github.event.pull_request.number }}" ]; then
+          #   echo "function_name=rss-delivery-test${{ github.event.pull_request.number }}" >> $GITHUB_OUTPUT
+          # else
+            echo "function_name=rss-delivery-test" >> $GITHUB_OUTPUT
+          # fi
+
+  deploy:
+    needs: [prepare-deploy, test]
+    uses: yananob/myapps-common/.github/workflows/deploy-cloud-functions.yaml@main
+    with:
+      function_name: ${{ needs.prepare-deploy.outputs.function_name }}
+      service_account_name: 'cloud-run-functions-deployer'
+      wip_pool_name: 'github-actions-pool'
+      wip_provider_name: 'github-provider'
+      runtime: php82
+      secrets_config: |-
+        FIREBASE_SERVICE_ACCOUNT
+        LINE_TOKENS_N_TARGETS
+        RAINDROP_KEY
+      deploy_http_trigger: true
+      deploy_event_trigger: true
+      http_max_instance_count: 1
+      memory: '256M'
+      http_timeout: '5m'
+      event_timeout: '540s'
+      environment_variables: |-
+        APP_ENV=test
+    secrets:
+      GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+      GCP_REGION: ${{ secrets.GCP_REGION }}
+      GCP_PROJECT_NUMBER: ${{ secrets.GCP_PROJECT_NUMBER }}
+
+  comment:
+    needs: [deploy, prepare-deploy]
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+    permissions:
+      pull-requests: write
+      contents: read  # チェックアウトなど、他の操作に必要
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: 'true'
+      - name: Add comment to PR
+        run: |
+          gh pr comment $PR_NUMBER --body "Deployment succeeded to https://${{ needs.prepare-deploy.outputs.function_name }}-${{ secrets.GCP_PROJECT_NUMBER }}.${{ secrets.GCP_REGION }}.run.app \n [skip ci]"

@@ -3,7 +3,7 @@
     "description": "RSSフィードをLINEやRaindropに通知するサービス",
     "license": "proprietary",
     "require": {
-        "php": "^8.2",
+        "php": "~8.2.0",
         "google/cloud-functions-framework": "^1.4",
         "google/cloud-firestore": "^1.54",
         "laminas/laminas-feed": "^2.20",
@@ -24,6 +24,11 @@
     "autoload-dev": {
         "psr-4": {
             "Tests\\": "tests/"
+        }
+    },
+    "config": {
+        "platform": {
+            "php": "8.2"
         }
     }
 }
