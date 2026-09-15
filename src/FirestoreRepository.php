@@ -29,7 +29,11 @@ class FirestoreRepository
         if ($firestore) {
             self::$client = $firestore;
         } elseif (self::$client === null) {
-            $options = [];
+            $options = [
+                'credentialsConfig' => [
+                    'scopes' => [FirestoreClient::FULL_CONTROL_SCOPE],
+                ],
+            ];
             if (getenv('FIRESTORE_EMULATOR_HOST')) {
                 $options['projectId'] = 'dummy-project';
             }
