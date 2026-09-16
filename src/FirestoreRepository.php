@@ -29,21 +29,13 @@ class FirestoreRepository
         if ($firestore) {
             self::$client = $firestore;
         } elseif (self::$client === null) {
-            $firebaseServiceAccountEnv = getenv('FIREBASE_SERVICE_ACCOUNT');
-            $gcpServiceAccount = $firebaseServiceAccountEnv ? json_decode($firebaseServiceAccountEnv, true) : null;
-            $options = [];
-            if ($gcpServiceAccount) {
-                $options['keyFile'] = $gcpServiceAccount;
-                $options['projectId'] = $gcpServiceAccount['project_id'] ?? null;
-            }
-
+            $options = [
+                'credentialsConfig' => [
+                    'scopes' => [FirestoreClient::FULL_CONTROL_SCOPE],
+                ],
+            ];
             if (getenv('FIRESTORE_EMULATOR_HOST')) {
-                $options['projectId'] = $options['projectId'] ?? 'dummy-project';
-            }
-
-            // プロジェクトIDが設定されていない場合のフォールバック
-            if (!isset($options['projectId']) || !$options['projectId']) {
-                $options['projectId'] = 'rss-delivery-project';
+                $options['projectId'] = 'dummy-project';
             }
 
             self::$client = new FirestoreClient($options);

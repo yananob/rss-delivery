@@ -26,7 +26,6 @@
 | 変数名 | 説明 | 備考 |
 | :--- | :--- | :--- |
 | `APP_ENV` | 実行環境の指定。`production`, `test`, `development` のいずれか。 | デフォルトは `development` |
-| `FIREBASE_SERVICE_ACCOUNT` | Firestore 操作用のサービスアカウントキー（JSON形式）。 | サーバーサイドでの認証に使用 |
 | `OPENAI_KEY_XXXX` | OpenAI API のシークレットキー。 | `XXXX` はアプリごとに変える |
 | `K_SERVICE` | Cloud Functions のサービス名。 | URLの組み立てなどに使用 |
 
@@ -38,17 +37,14 @@
 
 ## 3. Firestore の初期化
 
-Firestore へのアクセスには、環境変数 `FIREBASE_SERVICE_ACCOUNT` に設定された JSON キーを使用します。
+Firestore へのアクセスは Application Default Credentials (ADC) や GCP 環境のデフォルト認証を使用するため、明示的なキーファイル（`FIREBASE_SERVICE_ACCOUNT` 等）の指定は不要です。
 
 ### ライブラリの初期化例
 
-Google Cloud PHP クライアントライブラリを使用する場合、JSON キーの内容を直接渡して初期化します。
+Google Cloud PHP クライアントライブラリを使用する場合、引数なしでインスタンス化します。
 
 ```php
-$config = json_decode(getenv("FIREBASE_SERVICE_ACCOUNT"), true);
-$firestore = new FirestoreClient([
-    "keyFile" => $config
-]);
+$firestore = new FirestoreClient();
 ```
 
 ---
@@ -60,5 +56,5 @@ $firestore = new FirestoreClient([
   - PHP/JavaScript の変数・メソッド名は `camelCase`。
   - クラス名は `PascalCase`。
 - **デプロイとシークレット**:
-  デプロイは GitHub Actions (`.github/workflows/deploy-*.yaml`) で自動化します。機密性の高い環境変数（`FIREBASE_SERVICE_ACCOUNT` 等）は、GitHub Secrets に保存され、デプロイ時に Cloud Functions の環境変数として設定されます。
+  デプロイは GitHub Actions (`.github/workflows/deploy-*.yaml`) で自動化します。機密性の高い環境変数は、GitHub Secrets に保存され、デプロイ時に Cloud Functions の環境変数として設定されます。
 - 処理状況が分かるように、適宜ログを出力する。ログ出力には monolog を使う。
