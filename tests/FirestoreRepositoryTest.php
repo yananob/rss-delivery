@@ -31,12 +31,11 @@ class FirestoreRepositoryTest extends TestCase
         // putenv('FIRESTORE_EMULATOR_HOST=localhost:8080');
 
         // 実際のFirestoreクライアントを使用
-        $gcpServiceAccount = json_decode(getenv('FIREBASE_SERVICE_ACCOUNT'), true);
-        $this->firestore = new FirestoreClient(
-            [
-                'keyFile' => $gcpServiceAccount,
-            ]
-        );
+        $this->firestore = new FirestoreClient([
+            'credentialsConfig' => [
+                'scopes' => [FirestoreClient::FULL_CONTROL_SCOPE],
+            ],
+        ]);
         $this->collectionRoot = $this->firestore->collection(AppConfig::getFirestoreRootCollection());
         $this->repository = new FirestoreRepository($this->firestore);
 
