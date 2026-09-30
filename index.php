@@ -45,17 +45,19 @@ function main_http(ServerRequestInterface $request): ResponseInterface
     $path = $request->getUri()->getPath();
     $method = $request->getMethod();
     $env = AppConfig::getEnvironment();
+    $basePath = AppConfig::getBasePath();
 
     // ルーティング用のパスを決定する
     $matchPath = $path;
-    // 空文字の場合は / に統一
+    if ($basePath !== '' && str_starts_with($matchPath, $basePath)) {
+        $matchPath = substr($matchPath, strlen($basePath));
+    }
     if ($matchPath === '') {
         $matchPath = '/';
     }
-    // URLデコードする
     $matchPath = urldecode($matchPath);
 
-    error_log("Request: $method $path (matchPath: $matchPath, env: $env)");
+    error_log("Request: $method $path (matchPath: $matchPath, basePath: $basePath, env: $env)");
 
     try {
         if ($matchPath === '/' && $method === 'GET') {
@@ -68,6 +70,7 @@ function main_http(ServerRequestInterface $request): ResponseInterface
                 'feeds' => $feeds,
                 'currentSort' => $sort,
                 'currentDirection' => $direction,
+                'basePath' => $basePath,
             ]));
         }
 
@@ -75,13 +78,14 @@ function main_http(ServerRequestInterface $request): ResponseInterface
             $lineBotIds = AppConfig::getLineBotIds();
             return new Response(200, [], $blade->run('edit', [
                 'feed' => null,
-                'lineBotIds' => $lineBotIds
+                'lineBotIds' => $lineBotIds,
+                'basePath' => $basePath,
             ]));
         }
 
         if ($matchPath === '/new' && $method === 'POST') {
             $params = $request->getParsedBody();
-            if (empty($params['name']) || empty($params['url']) || empty($params['notify_method'])) {
+            if (!is_array($params) || empty($params['name']) || empty($params['url']) || empty($params['notify_method'])) {
                 return new Response(400, [], 'Missing required parameters');
             }
 
@@ -92,7 +96,7 @@ function main_http(ServerRequestInterface $request): ResponseInterface
                 'notify_bot' => $params['notify_bot'] ?? null,
                 'enabled' => isset($params['enabled']),
             ]);
-            return new Response(302, ['Location' => '/']);
+            return new Response(302, ['Location' => $basePath . '/']);
         }
 
         if (preg_match('#^/edit/([^/]+)$#', $matchPath, $matches) && $method === 'GET') {
@@ -105,14 +109,15 @@ function main_http(ServerRequestInterface $request): ResponseInterface
             $lineBotIds = AppConfig::getLineBotIds();
             return new Response(200, [], $blade->run('edit', [
                 'feed' => $feed,
-                'lineBotIds' => $lineBotIds
+                'lineBotIds' => $lineBotIds,
+                'basePath' => $basePath,
             ]));
         }
 
         if (preg_match('#^/edit/([^/]+)$#', $matchPath, $matches) && $method === 'POST') {
             $id = $matches[1];
             $params = $request->getParsedBody();
-            if (empty($params['name']) || empty($params['url']) || empty($params['notify_method'])) {
+            if (!is_array($params) || empty($params['name']) || empty($params['url']) || empty($params['notify_method'])) {
                 return new Response(400, [], 'Missing required parameters');
             }
 
@@ -123,13 +128,13 @@ function main_http(ServerRequestInterface $request): ResponseInterface
                 'notify_bot' => $params['notify_bot'] ?? null,
                 'enabled' => isset($params['enabled']),
             ]);
-            return new Response(302, ['Location' => '/']);
+            return new Response(302, ['Location' => $basePath . '/']);
         }
 
         if (preg_match('#^/delete/([^/]+)$#', $matchPath, $matches) && $method === 'POST') {
             $id = $matches[1];
             $repository->deleteFeed($id);
-            return new Response(302, ['Location' => '/']);
+            return new Response(302, ['Location' => $basePath . '/']);
         }
 
         error_log("Route not found: $method $path (matchPath: $matchPath)");

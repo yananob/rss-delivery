@@ -20,7 +20,23 @@ class AppConfig
      */
     public static function getEnvironment(): string
     {
-        return getenv('APP_ENV');
+        $env = getenv('APP_ENV');
+        return is_string($env) && $env !== '' ? $env : 'local';
+    }
+
+    /**
+     * ベースパスを取得します。
+     * サブパスでのデプロイ時に使用されます。
+     *
+     * @return string ベースパス。
+     */
+    public static function getBasePath(): string
+    {
+        return match (self::getEnvironment()) {
+            'production' => '/rss-delivery',
+            'test' => '/rss-delivery-test',
+            default => '',
+        };
     }
 
     /**
@@ -32,7 +48,7 @@ class AppConfig
     {
         return match (self::getEnvironment()) {
             'production' => 'rss-delivery',
-            'test', => 'rss-delivery-test',
+            'test' => 'rss-delivery-test',
             default => 'rss-delivery-test',
         };
     }
@@ -45,7 +61,6 @@ class AppConfig
     public static function getLineDeliverTarget(): string
     {
         return match (self::getEnvironment()) {
-            // 'production' => '',
             'test' => 'nobu',
             default => 'nobu',
         };
@@ -54,23 +69,23 @@ class AppConfig
     /**
      * LINEメッセージ配信のボットID一覧を取得します。
      *
-     * @return array<string> ボットIDの配列。
+     * @return array<int, string> ボットIDの配列。
      */
     public static function getLineBotIds(): array
     {
         $lineConfigJson = getenv('LINE_TOKENS_N_TARGETS');
-        if (!$lineConfigJson) {
+        if (!is_string($lineConfigJson) || $lineConfigJson === '') {
             return [];
         }
 
         $lineConfig = json_decode($lineConfigJson, true);
-        if (!isset($lineConfig['target_ids'])) {
+        if (!is_array($lineConfig) || !isset($lineConfig['target_ids']) || !is_array($lineConfig['target_ids'])) {
             return [];
         }
 
         $ids = array_keys($lineConfig['target_ids']);
         return array_values(array_filter($ids, function ($id) {
-            return !str_starts_with($id, '__');
+            return is_string($id) && !str_starts_with($id, '__');
         }));
     }
 }

@@ -8,53 +8,64 @@
 
 本アプリケーションは、Google Cloud Functions を基盤としたサーバーレスアーキテクチャを採用しています。
 
-- **ランタイム**: PHP 8.2 以上
+- **ランタイム**: PHP 8.4
 - **データベース**: Google Cloud Firestore (Native Mode)
 - **ビュー**: BladeOne を使用してテンプレートを描画します。
 - **エントリポイント (`index.php`)**:
-  - `main_http`: HTTPリクエストを処理します。
-  - `main_event`: Pub/Sub などのイベントを処理します。
+  - `main_http`: Web UIおよび管理者操作のHTTPリクエストを処理します。
+  - `main_event`: Pub/Sub などのイベントをトリガーとしてRSSフィードの巡回・通知処理を実行します。
 
 ---
 
 ## 2. 環境変数の管理
 
-環境変数は、アプリケーションの挙動を環境（開発・テスト・本番）ごとに切り替えるために重要です。
+環境変数は、アプリケーションの挙動を環境（開発・テスト・本番）ごとに切り替えるために使用されます。
 
 ### 主要な環境変数
 
 | 変数名 | 説明 | 備考 |
 | :--- | :--- | :--- |
-| `APP_ENV` | 実行環境の指定。`production`, `test`, `development` のいずれか。 | デフォルトは `development` |
-| `OPENAI_KEY_XXXX` | OpenAI API のシークレットキー。 | `XXXX` はアプリごとに変える |
-| `K_SERVICE` | Cloud Functions のサービス名。 | URLの組み立てなどに使用 |
+| `APP_ENV` | 実行環境の指定。`production`, `test`, `local` のいずれか。 | デフォルトは `local` |
+| `LINE_TOKENS_N_TARGETS` | LINE通知用のアクセストークンおよび宛先IDを設定したJSON文字列。 | `tokens` および `target_ids` キーを保有 |
+| `RAINDROP_KEY` | Raindrop.io API のアクセストークン。 | 通知方法が `Save` の場合に使用 |
+| `K_SERVICE` | Cloud Functions のサービス名。 | GCP環境での識別用 |
 
-### 環境変数の取得方法
+### 環境変数の取得と設定情報
 
-原則として直接 `getenv()` を呼び出すのではなく、`src/AppConfig.php` 等を介して取得します。これにより、デフォルト値の設定や環境ごとのロジック変更を抽象化します。
-
----
-
-## 3. Firestore の初期化
-
-Firestore へのアクセスは Application Default Credentials (ADC) や GCP 環境のデフォルト認証を使用するため、明示的なキーファイル（`FIREBASE_SERVICE_ACCOUNT` 等）の指定は不要です。
-
-### ライブラリの初期化例
-
-Google Cloud PHP クライアントライブラリを使用する場合、引数なしでインスタンス化します。
-
-```php
-$firestore = new FirestoreClient();
-```
+原則として直接 `getenv()` を呼び出すのではなく、`App\AppConfig` クラスを介して取得します。これにより、デフォルト値の設定や環境ごとのロジック変更を抽象化します。
 
 ---
 
-## 4. コーディング規約とルール
+## 3. サブパス対応とルーティング
 
-- **日付操作**: 必ず `Carbon\Carbon` を使用してください。
+サブパス配下での動作に対応するため、`AppConfig::getBasePath()` でベースパスを管理します。
+
+- **ルーティング (`index.php`)**: リクエストパスからベースパスを取り除いた相対パス `$matchPath` を用いてマッチングを行います。
+- **テンプレート (`views/*.blade.php`)**: 内部リンクやフォームのアクション属性には `{{ $basePath ?? '' }}` をプレフィックスとして付与します。
+- **リダイレクト**: レスポンスの `Location` ヘッダーにもベースパスを含めます。
+
+---
+
+## 4. クラス設計とテスト可能性
+
+- **依存性の注入 (Dependency Injection)**:
+  - 外部APIクライアント (`GuzzleHttp\Client` など) やデータベース操作クラスはコンストラクタインジェクションを利用して注入します。
+  - テスト時にはモックオブジェクトを差し替えることで、外部通信を行わない高速かつ安定した単体テストを可能にします。
+- **単体テスト作成方針**:
+  - 新機能追加やリファクタリング時には、必ず単体テストを作成・更新します。
+  - テストメソッド名は `test_` で始まる日本語とし、読みやすく意図が伝わる名称にします。
+  - テストコード中のコメントもすべて日本語で記述します。
+
+---
+
+## 5. コーディング規約とルール
+
+- **日付・時刻操作**:
+  - タイムゾーンは原則として `Asia/Tokyo` を使用します。
+  - `Carbon\Carbon` や `DateTime` / `DateTimeZone` を明示的に使用します。
+  - Firestoreへの保存形式は `'YYYY/MM/DD HH:mm:ss'` 形式の文字列とし、ロジック上ではUnixタイムスタンプとして扱います。
 - **命名規則**:
-  - PHP/JavaScript の変数・メソッド名は `camelCase`。
-  - クラス名は `PascalCase`。
-- **デプロイとシークレット**:
-  デプロイは GitHub Actions (`.github/workflows/deploy-*.yaml`) で自動化します。機密性の高い環境変数は、GitHub Secrets に保存され、デプロイ時に Cloud Functions の環境変数として設定されます。
-- 処理状況が分かるように、適宜ログを出力する。ログ出力には monolog を使う。
+  - 変数名・メソッド名・プロパティ名は `camelCase`。
+  - クラス名・インターフェース名は `PascalCase`。
+- **ログ出力**:
+  - 処理の進捗やエラー情報は Monolog (`Logger`) を使用して標準エラー出力 (`php://stderr`) 等へ出力します。

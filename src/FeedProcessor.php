@@ -5,9 +5,16 @@ declare(strict_types=1);
 namespace App;
 
 use Monolog\Logger;
+use DateTime;
+use DateTimeZone;
 
+/**
+ * RSSフィードの取得、更新チェック、および通知処理を管理するクラス
+ */
 class FeedProcessor
 {
+    private const MAX_NEW_ITEMS_NOTIFY_LIMIT = 20;
+
     public function __construct(
         private FirestoreRepository $firestoreRepo,
         private RssParser $rssParser,
@@ -17,6 +24,9 @@ class FeedProcessor
     ) {
     }
 
+    /**
+     * 設定されているすべてのRSSフィードを処理する
+     */
     public function processAllFeeds(): void
     {
         $this->log->debug('Fetching RSS feed configurations from Firestore.');
@@ -39,6 +49,11 @@ class FeedProcessor
         }
     }
 
+    /**
+     * 単一のRSSフィードを処理する
+     *
+     * @param Feed $feed
+     */
     private function processSingleFeed(Feed $feed): void
     {
         $feedId = $feed->getId();
@@ -46,7 +61,6 @@ class FeedProcessor
         $feedName = $feed->getName();
         $this->log->info("Processing feed: [{$feedName}] (ID: {$feedId}, URL: {$feedUrl})");
 
-        // lastUpdatedAtがnullの場合、初回実行と判断する
         $rawLastUpdatedAt = $this->firestoreRepo->getLastUpdatedAt($feedId);
         $isFirstRun = ($rawLastUpdatedAt === null);
         $lastUpdatedAt = $rawLastUpdatedAt ?? 0;
@@ -61,10 +75,7 @@ class FeedProcessor
             return;
         }
 
-        $newItems = array_filter($items, function ($item) use ($lastUpdatedAt) {
-            return isset($item['updated_at']) && $item['updated_at'] > $lastUpdatedAt;
-        });
-
+        $newItems = $this->filterNewItems($items, $lastUpdatedAt);
         if (empty($newItems)) {
             $this->log->info("No new items found for feed [{$feedName}]. Skipping.");
             return;
@@ -73,40 +84,84 @@ class FeedProcessor
         $newItemsCount = count($newItems);
         $this->log->info("{$newItemsCount} new items found for feed [{$feedName}].");
 
-        usort($newItems, function ($a, $b) {
-            return $a['updated_at'] <=> $b['updated_at'];
-        });
+        // 日時昇順にソート
+        usort($newItems, fn(array $a, array $b): int => ($a['updated_at'] ?? 0) <=> ($b['updated_at'] ?? 0));
 
-        // 常に最新の記事の日時を保存する
+        // 最新の記事の日時を保存
         $latestItemTimestamp = end($newItems)['updated_at'];
         $this->firestoreRepo->saveLastUpdatedAt($feedId, $latestItemTimestamp);
         $this->log->debug("Saved last updated timestamp ({$latestItemTimestamp}) for feed [{$feedName}].");
 
-        // 初回実行時は通知をスキップ
-        if ($isFirstRun) {
-            $this->log->info("First run for feed '{$feedName}'. Skipping notification process.");
-            return;
-        }
-
-        // 新規アイテムが20件を超える場合は通知をスキップ
-        if ($newItemsCount > 20) {
-            $this->log->info("Too many new items ({$newItemsCount}) for feed '{$feedName}'. Skipping notification process to avoid flooding.");
+        if ($this->shouldSkipNotification($feedName, $isFirstRun, $newItemsCount)) {
             return;
         }
 
         foreach ($newItems as $item) {
             $this->log->info("Processing new item '{$item['title']}' (Updated: {$item['updated_at']}) for feed [{$feedName}].");
-            if ($feed->getNotifyMethod() === 'LINE') {
-                $this->notifyLine($feed, $item);
-            } elseif ($feed->getNotifyMethod() === 'Save') {
-                $this->saveToRaindrop($item);
-            } else {
-                $this->log->warning("Unknown notification method '{$feed->getNotifyMethod()}' for feed [{$feedName}]. Item '{$item['title']}' not notified.");
-            }
+            $this->dispatchNotification($feed, $item);
         }
         $this->log->info("Finished processing all new items for feed [{$feedName}].");
     }
 
+    /**
+     * 最終更新日時より新しい記事を抽出する
+     *
+     * @param array<int, array<string, mixed>> $items
+     * @param int $lastUpdatedAt
+     * @return array<int, array<string, mixed>>
+     */
+    private function filterNewItems(array $items, int $lastUpdatedAt): array
+    {
+        return array_values(array_filter($items, function (array $item) use ($lastUpdatedAt): bool {
+            return isset($item['updated_at']) && is_int($item['updated_at']) && $item['updated_at'] > $lastUpdatedAt;
+        }));
+    }
+
+    /**
+     * 通知処理をスキップすべきかどうか判定する
+     *
+     * @param string $feedName
+     * @param bool $isFirstRun
+     * @param int $newItemsCount
+     * @return bool
+     */
+    private function shouldSkipNotification(string $feedName, bool $isFirstRun, int $newItemsCount): bool
+    {
+        if ($isFirstRun) {
+            $this->log->info("First run for feed '{$feedName}'. Skipping notification process.");
+            return true;
+        }
+
+        if ($newItemsCount > self::MAX_NEW_ITEMS_NOTIFY_LIMIT) {
+            $this->log->info("Too many new items ({$newItemsCount}) for feed '{$feedName}'. Skipping notification process to avoid flooding.");
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * 通知方法に応じて通知を振り分ける
+     *
+     * @param Feed $feed
+     * @param array<string, mixed> $item
+     */
+    private function dispatchNotification(Feed $feed, array $item): void
+    {
+        if ($feed->getNotifyMethod() === 'LINE') {
+            $this->notifyLine($feed, $item);
+        } elseif ($feed->getNotifyMethod() === 'Save') {
+            $this->saveToRaindrop($item);
+        } else {
+            $this->log->warning("Unknown notification method '{$feed->getNotifyMethod()}' for feed [{$feed->getName()}]. Item '{$item['title']}' not notified.");
+        }
+    }
+
+    /**
+     * Raindrop.ioへ保存する
+     *
+     * @param array<string, mixed> $item
+     */
     private function saveToRaindrop(array $item): void
     {
         $this->log->info("Attempting to save item '{$item['title']}' to Raindrop.io.");
@@ -124,6 +179,12 @@ class FeedProcessor
         }
     }
 
+    /**
+     * LINEへ通知を送信する
+     *
+     * @param Feed $feed
+     * @param array<string, mixed> $item
+     */
     private function notifyLine(Feed $feed, array $item): void
     {
         // JSTで7時から22時の間のみ通知する
@@ -143,9 +204,10 @@ class FeedProcessor
             return;
         }
 
-        $lineConfig = json_decode(getenv('LINE_TOKENS_N_TARGETS'), true);
+        $lineConfigEnv = getenv('LINE_TOKENS_N_TARGETS');
+        $lineConfig = is_string($lineConfigEnv) ? json_decode($lineConfigEnv, true) : null;
 
-        if (!isset($lineConfig['tokens'][$botId]) || !isset($lineConfig['target_ids'][$botId])) {
+        if (!is_array($lineConfig) || !isset($lineConfig['tokens'][$botId]) || !isset($lineConfig['target_ids'][$botId])) {
             $this->log->error("LINE configuration (token or target ID) for bot '{$botId}' is missing. Item '{$item['title']}' not notified.");
             return;
         }
@@ -162,8 +224,13 @@ class FeedProcessor
         }
     }
 
-    protected function getCurrentTime(): \DateTime
+    /**
+     * 現在時刻を取得する (テスト時にオーバーライド可能)
+     *
+     * @return DateTime
+     */
+    protected function getCurrentTime(): DateTime
     {
-        return new \DateTime('now', new \DateTimeZone('Asia/Tokyo'));
+        return new DateTime('now', new DateTimeZone('Asia/Tokyo'));
     }
 }

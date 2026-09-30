@@ -17,10 +17,12 @@ class RaindropNotifier
 
     /**
      * コンストラクタ
+     *
+     * @param Client|null $httpClient Guzzle HTTP Client
      */
-    public function __construct()
+    public function __construct(?Client $httpClient = null)
     {
-        $this->httpClient = new Client();
+        $this->httpClient = $httpClient ?: new Client();
     }
 
     /**
@@ -33,7 +35,7 @@ class RaindropNotifier
     public function save(string $accessToken, array $item): bool
     {
         $link = $item['link'] ?? null;
-        if (!$link) {
+        if (!is_string($link) || $link === '') {
             return false;
         }
 
