@@ -9,7 +9,7 @@ concurrency:
   group: rss-delivery-deploy-prod
 
 permissions:
-  contents: 'read'
+  contents: 'write'
   id-token: 'write'
 
 jobs:
