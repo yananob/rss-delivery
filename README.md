@@ -8,7 +8,7 @@
 ## 開発環境のセットアップ
 
 ### 前提条件
-- PHP 8.3 以上
+- PHP 8.4 以上
 - Composer
 - Google Cloud SDK (テストでFirestoreに接続する場合)
 
