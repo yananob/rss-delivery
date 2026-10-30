@@ -35,7 +35,7 @@ jobs:
       service_account_name: 'cloud-run-functions-deployer'
       wip_pool_name: 'github-actions-pool'
       wip_provider_name: 'github-provider'
-      runtime: php82
+      runtime: php84
       secrets_config: |-
         LINE_TOKENS_N_TARGETS
         RAINDROP_KEY

@@ -30,6 +30,7 @@ class FirestoreRepository
             self::$client = $firestore;
         } elseif (self::$client === null) {
             $options = [
+                'transport' => 'rest',
                 'credentialsConfig' => [
                     'scopes' => [FirestoreClient::FULL_CONTROL_SCOPE],
                 ],
