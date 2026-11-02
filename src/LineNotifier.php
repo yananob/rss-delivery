@@ -21,7 +21,10 @@ class LineNotifier
      */
     public function __construct(?Client $httpClient = null)
     {
-        $this->httpClient = $httpClient ?: new Client();
+        $this->httpClient = $httpClient ?: new Client([
+            'timeout' => 15.0,
+            'connect_timeout' => 5.0,
+        ]);
     }
 
     /**

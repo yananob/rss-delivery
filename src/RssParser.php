@@ -26,7 +26,10 @@ class RssParser
     public function __construct(?Reader $reader = null, ?Client $httpClient = null)
     {
         $this->reader = $reader ?: new Reader();
-        $this->httpClient = $httpClient ?: new Client();
+        $this->httpClient = $httpClient ?: new Client([
+            'timeout' => 15.0,
+            'connect_timeout' => 5.0,
+        ]);
     }
 
     /**
@@ -37,6 +40,11 @@ class RssParser
      */
     public function parse(string $url): array
     {
+        if (!filter_var($url, FILTER_VALIDATE_URL) || !preg_match('#^https?://#i', $url)) {
+            error_log('Invalid RSS feed URL: ' . $url);
+            return [];
+        }
+
         try {
             $response = $this->httpClient->get($url);
             $feedContent = (string) $response->getBody();
