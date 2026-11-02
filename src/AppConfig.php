@@ -20,7 +20,8 @@ class AppConfig
      */
     public static function getEnvironment(): string
     {
-        return getenv('APP_ENV');
+        $env = getenv('APP_ENV');
+        return ($env !== false && $env !== '') ? $env : 'local';
     }
 
     /**
@@ -64,7 +65,7 @@ class AppConfig
         }
 
         $lineConfig = json_decode($lineConfigJson, true);
-        if (!isset($lineConfig['target_ids'])) {
+        if (!is_array($lineConfig) || !isset($lineConfig['target_ids']) || !is_array($lineConfig['target_ids'])) {
             return [];
         }
 
