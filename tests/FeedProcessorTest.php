@@ -32,12 +32,37 @@ class TestableFeedProcessor extends FeedProcessor
 class FeedProcessorTest extends TestCase
 {
     private Logger $logger;
+    private string|false $originalLineConfig;
+    private string|false $originalRaindropKey;
 
     protected function setUp(): void
     {
         parent::setUp();
         $this->logger = new Logger('test');
         $this->logger->pushHandler(new NullHandler());
+
+        $this->originalLineConfig = getenv('LINE_TOKENS_N_TARGETS');
+        $this->originalRaindropKey = getenv('RAINDROP_KEY');
+
+        putenv('LINE_TOKENS_N_TARGETS={"tokens":{"test_bot":"dummy_token"},"target_ids":{"test_bot":"dummy_target"}}');
+        putenv('RAINDROP_KEY=test-raindrop-key');
+    }
+
+    protected function tearDown(): void
+    {
+        if ($this->originalLineConfig !== false) {
+            putenv("LINE_TOKENS_N_TARGETS={$this->originalLineConfig}");
+        } else {
+            putenv('LINE_TOKENS_N_TARGETS');
+        }
+
+        if ($this->originalRaindropKey !== false) {
+            putenv("RAINDROP_KEY={$this->originalRaindropKey}");
+        } else {
+            putenv('RAINDROP_KEY');
+        }
+
+        parent::tearDown();
     }
 
     public function test_無効なフィードはスキップされる(): void
