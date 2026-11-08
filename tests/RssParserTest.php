@@ -118,6 +118,19 @@ XML;
         $this->assertEquals(strtotime('2023-01-03T12:00:00Z'), $result[0]['updated_at']);
     }
 
+    public function test_不正なURLやスキームは空配列を返す(): void
+    {
+        $mock = new MockHandler([]);
+        $handlerStack = HandlerStack::create($mock);
+        $httpClient = new Client(['handler' => $handlerStack]);
+
+        $parser = new RssParser(null, $httpClient);
+
+        $this->assertSame([], $parser->parse('not-a-valid-url'));
+        $this->assertSame([], $parser->parse('ftp://example.com/feed.xml'));
+        $this->assertSame([], $parser->parse('file:///etc/passwd'));
+    }
+
   public function test_Atomフィードを正しく解析できる(): void
     {
         $atomContent = <<<XML

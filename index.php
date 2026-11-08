@@ -84,6 +84,9 @@ function main_http(ServerRequestInterface $request): ResponseInterface
             if (empty($params['name']) || empty($params['url']) || empty($params['notify_method'])) {
                 return new Response(400, [], 'Missing required parameters');
             }
+            if (!filter_var($params['url'], FILTER_VALIDATE_URL) || !preg_match('#^https?://#i', (string) $params['url'])) {
+                return new Response(400, [], 'Invalid feed URL');
+            }
 
             $repository->addFeed([
                 'name' => $params['name'],
@@ -114,6 +117,9 @@ function main_http(ServerRequestInterface $request): ResponseInterface
             $params = $request->getParsedBody();
             if (empty($params['name']) || empty($params['url']) || empty($params['notify_method'])) {
                 return new Response(400, [], 'Missing required parameters');
+            }
+            if (!filter_var($params['url'], FILTER_VALIDATE_URL) || !preg_match('#^https?://#i', (string) $params['url'])) {
+                return new Response(400, [], 'Invalid feed URL');
             }
 
             $repository->updateFeed($id, [
