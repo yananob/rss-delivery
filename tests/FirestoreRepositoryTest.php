@@ -32,6 +32,7 @@ class FirestoreRepositoryTest extends TestCase
 
         // 実際のFirestoreクライアントを使用
         $this->firestore = new FirestoreClient([
+            'transport' => 'rest',
             'credentialsConfig' => [
                 'scopes' => [FirestoreClient::FULL_CONTROL_SCOPE],
             ],
