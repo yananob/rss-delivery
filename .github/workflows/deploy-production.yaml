@@ -9,7 +9,7 @@ concurrency:
   group: rss-delivery-deploy-prod
 
 permissions:
-  contents: 'read'
+  contents: 'write'
   id-token: 'write'
 
 jobs:
@@ -35,7 +35,7 @@ jobs:
       service_account_name: 'cloud-run-functions-deployer'
       wip_pool_name: 'github-actions-pool'
       wip_provider_name: 'github-provider'
-      runtime: php82
+      runtime: php84
       secrets_config: |-
         LINE_TOKENS_N_TARGETS
         RAINDROP_KEY
@@ -69,3 +69,7 @@ jobs:
       - name: Add comment to PR
         run: |
           gh pr comment $PR_NUMBER --body "Deployed to url https://${{ secrets.GCP_REGION }}-${{ secrets.GCP_PROJECT_ID }}.cloudfunctions.net/${{ needs.prepare.outputs.function_name }}"
+
+  create-tag:
+    needs: [deploy]
+    uses: yananob/myapps-common/.github/workflows/create-release-tag.yml@main

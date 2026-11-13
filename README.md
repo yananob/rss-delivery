@@ -8,7 +8,7 @@
 ## 開発環境のセットアップ
 
 ### 前提条件
-- PHP 8.3 以上
+- PHP 8.4 以上
 - Composer
 - Google Cloud SDK (テストでFirestoreに接続する場合)
 
@@ -34,7 +34,12 @@ composer install
 ## テストの実行
 PHPUnitを使用したテストが用意されています。
 
-### すべてのテストを実行
+### ユニットテストの実行（統合テストを除く）
+```bash
+./vendor/bin/phpunit --exclude-group integration
+```
+
+### すべてのテストを実行（認証が必要）
 ```bash
 ./vendor/bin/phpunit
 ```
