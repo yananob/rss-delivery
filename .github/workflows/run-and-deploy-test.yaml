@@ -22,7 +22,15 @@ permissions:
   id-token: 'write'
 
 jobs:
+  workflow-gate:
+    # draft PRの作成時はゲートをスキップし、依存する全ジョブも実行しない
+    if: github.event_name != 'pull_request' || github.event.action != 'opened' || !github.event.pull_request.draft
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "ワークフローを実行します"
+
   test:
+    needs: [workflow-gate]
     runs-on: ubuntu-latest
     env:
       GRPC_VERBOSITY: ERROR  # GRPCのログ出力を抑止
